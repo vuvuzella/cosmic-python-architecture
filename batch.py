@@ -16,7 +16,7 @@ class Batch:
         if self.can_allocate(line):
             self.available_quantity -= line.qty
         else:
-            raise InsufficientStocks(
+            raise InsufficientStocksException(
                 f"Unable to allocate {line.qty} of {self.name}, only {self.available_quantity} remaining "
             )
 
@@ -27,6 +27,13 @@ class Batch:
             and line.sku.lower() == self.name.lower()
         )
 
+    def deallocate(self, line) -> None:
+        ...
 
-class InsufficientStocks(Exception):
+
+class InsufficientStocksException(Exception):
+    ...
+
+
+class DeallocateStocksException(Exception):
     ...

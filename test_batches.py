@@ -1,4 +1,4 @@
-from batch import Batch
+from batch import Batch, DeallocateStocksException
 from order_line import OrderLine
 from datetime import date
 from typing import Iterator, Tuple, Optional
@@ -38,5 +38,11 @@ def test_can_allocate_if_available_equalt_to_required():
 
 def test_cannot_allocate_if_skus_do_not_match():
     another_batch = Batch("batch-001", "UNCOMFORTABLE-CHAIR", 20)
-    batch, line = create_test_components("SIMPLE-CHAIR", 20, 2)
+    _, line = create_test_components("SIMPLE-CHAIR", 20, 2)
     assert another_batch.can_allocate(line=line) is False
+
+
+def test_can_only_deallocate_allocated_lines():
+    batch, line = create_test_components("SIMPLE-CHAIR", 20, 10)
+    with pytest.raises(DeallocateStocksException):
+        batch.deallocate(line)
