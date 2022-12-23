@@ -1,6 +1,6 @@
 from order_line import OrderLine
 from datetime import date
-from typing import Optional
+from typing import Optional, Set
 
 import inspect
 
@@ -16,13 +16,19 @@ class Batch:
     ):
         self.id = id
         self.name = name
-        self.available_quantity = qty
+        self.purchased_stock = qty
         self.eta = eta
-        self.allocations = set()
+        self.allocations: Set[OrderLine] = set()
+
+    @property
+    def available_quantity(self):
+        sum_allocations = 0
+        for line in self.allocations:
+            sum_allocations += line.qty
+        return self.purchased_stock - sum_allocations
 
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
-            self.available_quantity -= line.qty
             self.allocations.add(line)
         else:
             raise InsufficientStocksException(
@@ -42,7 +48,6 @@ class Batch:
     def deallocate(self, line) -> None:
         if self._can_deallocate(line):
             self.allocations.remove(line)
-            self.available_quantity += line.qty
         else:
             raise DeallocateStocksException("Stock not allocated")
 

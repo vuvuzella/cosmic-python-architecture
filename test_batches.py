@@ -54,3 +54,15 @@ def test_can_deallocate_allocated_lines():
     assert batch.available_quantity == 10
     batch.deallocate(line=line)
     assert batch.available_quantity == 20
+
+
+def test_can_allocate_same_lines_multiple_times_without_double_accounting():
+    batch, line = create_test_components("SIMPLE-CHAIR", 20, 5)
+    batch.allocate(line)
+    assert batch.available_quantity == 15
+    batch.allocate(line)
+    assert batch.available_quantity == 15
+
+    new_line_order = OrderLine("order-002", "SIMPLE-CHAIR", 5)
+    batch.allocate(new_line_order)
+    assert batch.available_quantity == 10
