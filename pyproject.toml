@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "cosmic-python-ddd"
+version = "0.1.0"
+description = "Implementation of the DDD book over at cosmic python https://www.cosmicpython.com/book/preface.html"
+authors = ["Jonathan II Tabac <j.tabacii@gmail.com>"]
+license = "GPL"
+readme = "README.md"
+packages = [{include = "cosmic_python_ddd"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+uvicorn = "^0.20.0"
+fastapi = "^0.88.0"
+pydantic = "^1.10.2"
+sqlmodel = "^0.0.8"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
