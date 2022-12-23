@@ -46,3 +46,11 @@ def test_can_only_deallocate_allocated_lines():
     batch, line = create_test_components("SIMPLE-CHAIR", 20, 10)
     with pytest.raises(DeallocateStocksException):
         batch.deallocate(line)
+
+
+def test_can_deallocate_allocated_lines():
+    batch, line = create_test_components("SIMPLE-CHAIR", 20, 10)
+    batch.allocate(line=line)
+    assert batch.available_quantity == 10
+    batch.deallocate(line=line)
+    assert batch.available_quantity == 20
