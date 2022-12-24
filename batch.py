@@ -11,9 +11,7 @@ def _get_function_name():
 
 
 class Batch:
-    def __init__(
-        self, reference: str, name: str, qty: int, eta: Optional[date] = date.today()
-    ):
+    def __init__(self, reference: str, name: str, qty: int, eta: Optional[date] = None):
         self.reference = reference
         self.name = name
         self.purchased_quantity = qty
@@ -35,6 +33,15 @@ class Batch:
         if not isinstance(__o, Batch):
             return False
         return __o.reference == self.reference
+
+    def __gt__(self, __o: object) -> bool:
+        if self.eta is None:
+            return False
+        if __o is None:
+            return True
+        if not isinstance(__o, Batch):
+            raise ValueError("{__o} not of type Batch")
+        return self.eta > __o.eta  # type: ignore
 
     def __hash__(self) -> int:
         return hash(self.reference)
