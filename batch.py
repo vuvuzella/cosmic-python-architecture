@@ -16,16 +16,20 @@ class Batch:
     ):
         self.id = id
         self.name = name
-        self.purchased_stock = qty
+        self.purchased_quantity = qty
         self.eta = eta
         self.allocations: Set[OrderLine] = set()
 
     @property
     def available_quantity(self):
+        return self.purchased_quantity - self.allocated_quantity
+
+    @property
+    def allocated_quantity(self):
         sum_allocations = 0
         for line in self.allocations:
             sum_allocations += line.qty
-        return self.purchased_stock - sum_allocations
+        return sum_allocations
 
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
