@@ -66,3 +66,24 @@ def test_can_allocate_same_lines_multiple_times_without_double_accounting():
     new_line_order = OrderLine("order-002", "SIMPLE-CHAIR", 5)
     batch.allocate(new_line_order)
     assert batch.available_quantity == 10
+
+
+def test_same_valued_order_lines_are_equal():
+    line1 = OrderLine("order-ref-1", "SMALL-CHAIR", 10)
+    line2 = OrderLine("order-ref-1", "SMALL-CHAIR", 10)
+    assert (line1 == line2) == True
+
+
+def test_different_valued_order_lines_are_not_equal():
+    order_ref_one = "order-ref-1"
+    order_ref_two = "order-ref-2"
+    qty_ten = 10
+    qty_five = 5
+
+    small_chair_ol = OrderLine(order_ref_one, "SMALL-CHAIR", qty_ten)
+    large_chair_ol = OrderLine(order_ref_one, "LARGE-CHAIR", qty_ten)
+    assert (small_chair_ol == large_chair_ol) == False
+    new_small_chair_ol = OrderLine(order_ref_two, "SMALL-CHAIR", qty_ten)
+    assert (small_chair_ol == new_small_chair_ol) == False
+    different_quantity_ol = OrderLine(order_ref_one, "SMALL-CHAIR", qty_five)
+    assert (small_chair_ol == different_quantity_ol) == False

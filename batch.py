@@ -12,9 +12,9 @@ def _get_function_name():
 
 class Batch:
     def __init__(
-        self, id: str, name: str, qty: int, eta: Optional[date] = date.today()
+        self, reference: str, name: str, qty: int, eta: Optional[date] = date.today()
     ):
-        self.id = id
+        self.reference = reference
         self.name = name
         self.purchased_quantity = qty
         self.eta = eta
@@ -30,6 +30,14 @@ class Batch:
         for line in self.allocations:
             sum_allocations += line.qty
         return sum_allocations
+
+    def __eq__(self, __o: object) -> bool:
+        if not isinstance(__o, Batch):
+            return False
+        return __o.reference == self.reference
+
+    def __hash__(self) -> int:
+        return hash(self.reference)
 
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
