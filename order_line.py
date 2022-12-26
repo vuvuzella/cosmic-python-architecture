@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=False)
 class OrderLine:
-    orderedid: str
+    orderid: str
     sku: str
     qty: int
 
@@ -13,4 +13,4 @@ class OrderLine:
         return self.__hash__() == __o.__hash__()
 
     def __hash__(self) -> int:
-        return hash(f"{self.orderedid}{self.sku}{self.qty}")
+        return hash(f"{self.orderid}{self.sku}{self.qty}")
