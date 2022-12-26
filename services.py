@@ -1,7 +1,6 @@
 from typing import List
 
-from order_line import OrderLine
-from batch import Batch, InsufficientStocksException
+from models import OrderLine, Batch, InsufficientStocksException
 
 
 def allocate(line: OrderLine, batch: List[Batch]) -> Batch | None:

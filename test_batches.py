@@ -1,5 +1,9 @@
-from batch import Batch, DeallocateStocksException, InsufficientStocksException
-from order_line import OrderLine
+from models import (
+    Batch,
+    DeallocateStocksException,
+    InsufficientStocksException,
+    OrderLine,
+)
 from services import allocate
 
 from datetime import date, timedelta

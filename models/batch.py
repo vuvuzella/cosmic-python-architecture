@@ -1,4 +1,4 @@
-from order_line import OrderLine
+from models.order_line import OrderLine
 from datetime import date
 from typing import Optional, Set
 

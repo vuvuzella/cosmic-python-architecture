@@ -1,10 +1,11 @@
 from settings import settings
-from order_line import OrderLine
+from models import OrderLine
+
 from orm import start_mappers
 from orm import order_lines
-from sqlalchemy.engine import Connection, create_engine, Engine
+from sqlalchemy.engine import create_engine, Engine
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import text, select
+from sqlalchemy.sql import text
 from typing import Generator
 
 import pytest

@@ -6,6 +6,7 @@ from https://www.cosmicpython.com/book/preface.html
 4. run `poetry install` to install dev dependencies
 5. run `poetry run pytest` to run the tests
 6. run `poetry python [python file]` to run a specific python script
+7. In the root directory, create a foleder named `db_volume` which will serve as the database persistence storage
 
 Do not forget to set the python environment library in vscode so the libraries get referenced correctly
 

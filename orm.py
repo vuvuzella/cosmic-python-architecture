@@ -2,8 +2,7 @@ from sqlalchemy.orm import mapper, relationship
 from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey, event
 
 # the ORM imports the domain model, not the other way around
-from order_line import OrderLine
-from batch import Batch
+from models import OrderLine, Batch
 
 import logging
 
