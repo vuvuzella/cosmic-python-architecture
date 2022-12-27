@@ -1,5 +1,6 @@
 from abc import ABC, abstractclassmethod
 from sqlalchemy.orm import Session
+from typing import List
 
 from models import Batch
 
@@ -20,7 +21,10 @@ class SqlAlchemyRepository(AbstractRepository):
         self._session = session
 
     def add(self, batch: Batch):
-        raise NotImplementedError
+        self._session.add(batch)
 
     def get(self, reference) -> Batch:
-        raise NotImplementedError
+        return self._session.query(Batch).filter_by(reference=reference).one()
+
+    def list(self) -> List[Batch]:
+        return self._session.query(Batch).all()

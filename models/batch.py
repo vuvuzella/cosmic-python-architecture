@@ -1,6 +1,6 @@
 from models.order_line import OrderLine
 from datetime import date
-from typing import Optional, Set
+from typing import Optional, List
 
 import inspect
 
@@ -16,7 +16,11 @@ class Batch:
         self.name = name
         self._purchased_quantity = qty
         self.eta = eta
-        self._allocations: Set[OrderLine] = set()
+        self._allocations: List[
+            OrderLine
+        ] = (
+            []
+        )  # TODO: create a pydantic validator to maintain uniqueness of the contents
 
     @property
     def available_quantity(self):
@@ -48,7 +52,8 @@ class Batch:
 
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
-            self._allocations.add(line)
+            if not self._order_exists(line):
+                self._allocations.append(line)
         else:
             raise InsufficientStocksException(
                 f"Unable to allocate {line.qty} of {self.name}, only {self.available_quantity} remaining "
@@ -61,8 +66,17 @@ class Batch:
             and line.sku.lower() == self.name.lower()
         )
 
+    def _order_exists(self, line: OrderLine) -> bool:
+        for order_line in self._allocations:
+            if order_line == line:
+                return True
+        return False
+
     def _can_deallocate(self, line: OrderLine) -> bool:
-        return not self._allocations.isdisjoint({line})
+        for order_line in self._allocations:
+            if order_line == line:
+                return True
+        return False
 
     def deallocate(self, line) -> None:
         if self._can_deallocate(line):

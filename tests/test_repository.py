@@ -13,7 +13,7 @@ def test_repository_can_save_a_batch(session: Session):
     session.commit()
 
     rows = session.execute(
-        text("SELECT reference, sku, _purchased_quantity, eta FROM batches")
+        text("SELECT reference, name, _purchased_quantity, eta FROM batch")
     ).all()
 
-    assert rows == [batch]
+    assert rows == [("batch-no-1", "RUSTY-SOAPDISH", 100, None)]
