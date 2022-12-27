@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     DB_NAME: str = "cosmic_python_db"
     # DB_DSN_QUERY: str = Field("sslmode=requre", env=[""])
     # DB_DSB: stricturl(tld_required=False, allowed_schemes={"postgresql", "postgresql+asyncpg", "postgresql+psycopg", "postgresql+psycopg2"}) = Field(None, env=[""])
-    DB_DSN: str = Field(None)
+    DB_DSN: str = ""
 
     @validator("DB_DSN", pre=True, always=True)
     def make_dsn(cls, v, values: Dict[str, str | int], **kwargs):

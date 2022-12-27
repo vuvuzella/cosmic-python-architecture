@@ -1,44 +1,7 @@
-from settings import settings
 from models import OrderLine
 
-from orm import start_mappers
-from orm import order_lines
-from sqlalchemy.engine import create_engine, Engine
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
-from typing import Generator
-
-import pytest
-
-# code mostly from https://gist.github.com/kissgyorgy/e2365f25a213de44b9a2
-
-
-@pytest.fixture(scope="session")
-def engine() -> Engine:
-    return create_engine(settings.DB_DSN)  # TODO: curate special DSN for test database
-
-
-@pytest.fixture(scope="session")
-def tables(engine: Engine) -> Generator[None, None, None]:
-    order_lines.metadata.create_all(engine)
-    start_mappers()
-    yield
-    order_lines.metadata.drop_all(engine)
-
-
-@pytest.fixture(scope="session")
-def session(engine: Engine, tables) -> Generator[Session, None, None]:
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = Session(bind=connection)
-
-    yield session
-
-    session.close()
-
-    transaction.rollback()
-
-    connection.close
 
 
 def test_orderline_mapper_can_load_lines(session: Session):
