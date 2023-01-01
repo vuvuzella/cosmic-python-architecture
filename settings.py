@@ -23,4 +23,4 @@ class Settings(BaseSettings):
         )
 
 
-settings = Settings()
+global_settings = Settings()

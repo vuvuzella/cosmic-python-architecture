@@ -1,4 +1,4 @@
-from models.order_line import OrderLine
+from ..models.order_line import OrderLine
 from datetime import date
 from typing import Optional, List
 
@@ -50,6 +50,7 @@ class Batch:
     def __hash__(self) -> int:
         return hash(self.reference)
 
+    # Domain model level allocate function
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
             if not self._order_exists(line):

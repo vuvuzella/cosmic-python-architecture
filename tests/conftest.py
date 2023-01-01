@@ -1,4 +1,4 @@
-from settings import settings
+from global_settings import global_settings
 from sqlalchemy.engine import create_engine, Engine
 from sqlalchemy.orm import Session
 from typing import Generator
@@ -12,7 +12,9 @@ import pytest
 
 @pytest.fixture(scope="session")
 def engine() -> Engine:
-    return create_engine(settings.DB_DSN)  # TODO: curate special DSN for test database
+    return create_engine(
+        global_settings.DB_DSN
+    )  # TODO: curate special DSN for test database
 
 
 @pytest.fixture(scope="session")
@@ -36,3 +38,9 @@ def session(engine: Engine, tables) -> Generator[Session, None, None]:
     transaction.rollback()
 
     connection.close
+
+
+@pytest.fixture(scope="session")
+def add_stock():
+    # TODO: manually insert rows into database using SQL
+    raise NotImplementedError

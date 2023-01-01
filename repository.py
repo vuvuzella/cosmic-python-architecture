@@ -2,7 +2,12 @@ from abc import ABC, abstractclassmethod
 from sqlalchemy.orm import Session
 from typing import List
 
-from models import Batch
+from .models import Batch
+
+# This module encapsulates the way of communicating with a specific database by means of an interface
+# which in this case, is the AbstractRepository.
+# The idea is to separate the database access specific functions from the model themselves.
+# Repositories should never know about the model
 
 # TODO: use python generics to generalize this one
 class AbstractRepository(ABC):
@@ -12,6 +17,10 @@ class AbstractRepository(ABC):
 
     @abstractclassmethod
     def get(self, reference) -> Batch:
+        raise NotImplementedError
+
+    @abstractclassmethod
+    def list(self) -> list[Batch]:
         raise NotImplementedError
 
 

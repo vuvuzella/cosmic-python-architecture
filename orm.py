@@ -1,9 +1,10 @@
 from sqlalchemy.orm import mapper, relationship
 from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey, event
+from sqlalchemy.engine import Engine
 from typing import Set
 
 # the ORM imports the domain model, not the other way around
-from models import OrderLine, Batch
+from .models import OrderLine, Batch
 
 import logging
 
@@ -31,6 +32,10 @@ batch = Table(
     Column("_purchased_quantity", Integer),
     Column("eta", Date),
 )
+
+
+def create_tables(engine: Engine):
+    metadata.create_all(engine)
 
 
 def start_mappers():

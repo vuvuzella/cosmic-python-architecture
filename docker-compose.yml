@@ -12,6 +12,18 @@ services:
       - 5433:5432
     volumes:
       - db_volume:/var/lib/postgresql/data
+  flask_api:
+    image: flask_api:latest
+    build: ./
+    environment:
+      - DB_PORT=5432
+      - DB_HOST=db
+    ports:
+      - 5000:5000
+    volumes:
+      - ./:/code
+    depends_on:
+      - "db"
 
 volumes:
   db_volume:
@@ -19,4 +31,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${PWD}/db_volume
+      device: ${PWD}/persistent_store/db_volume

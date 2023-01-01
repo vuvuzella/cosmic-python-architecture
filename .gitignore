@@ -2,4 +2,4 @@
 .pytest_cache
 __pycache__
 .vscode
-db_volume
+persistent_store
