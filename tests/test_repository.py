@@ -2,7 +2,7 @@ from models import Batch, OrderLine
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
-from repository import SqlAlchemyRepository
+from infrastructure.repository import SqlAlchemyRepository
 
 
 def insert_order_lines(session: Session):

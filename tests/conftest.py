@@ -1,8 +1,8 @@
-from global_settings import global_settings
+from settings import global_settings
 from sqlalchemy.engine import create_engine, Engine
 from sqlalchemy.orm import Session
 from typing import Generator
-from orm import start_mappers, order_lines
+from infrastructure.orm import start_mappers, order_lines
 
 import pytest
 

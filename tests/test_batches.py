@@ -4,7 +4,7 @@ from models import (
     InsufficientStocksException,
     OrderLine,
 )
-from services import allocate
+from services.services import allocate
 
 from datetime import date, timedelta
 from typing import Iterator, Tuple, Optional

@@ -1,8 +1,8 @@
 from typing import List
 from sqlalchemy.orm import Session
 
-from .models import OrderLine, Batch, InsufficientStocksException
-from .repository import AbstractRepository
+from models import OrderLine, Batch, InsufficientStocksException
+from infrastructure.repository import AbstractRepository
 
 # Seems like this module sits between the Application (API) Layer and the Domain Layer
 # This is used by the application (API) layer to perform domain verbs/actions
@@ -26,6 +26,11 @@ def allocate(
         return allocatable_batch
     except StopIteration:
         raise InsufficientStocksException(f"Insufficient in stock for {line.sku}")
+
+
+# TODO: As an exercise, implement deallocate
+def deallocate(line: OrderLine, repo: AbstractRepository, session: Session):
+    raise NotImplementedError
 
 
 class InvalidSkuError(Exception):

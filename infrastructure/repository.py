@@ -2,7 +2,7 @@ from abc import ABC, abstractclassmethod
 from sqlalchemy.orm import Session
 from typing import List
 
-from .models import Batch
+from models import Batch
 
 # This module encapsulates the way of communicating with a specific database by means of an interface
 # which in this case, is the AbstractRepository.

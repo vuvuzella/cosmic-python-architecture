@@ -4,7 +4,7 @@ from sqlalchemy.engine import Engine
 from typing import Set
 
 # the ORM imports the domain model, not the other way around
-from .models import OrderLine, Batch
+from models import OrderLine, Batch
 
 import logging
 

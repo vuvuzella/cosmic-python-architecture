@@ -4,10 +4,10 @@ from sqlalchemy.orm import sessionmaker
 
 from ..settings import global_settings
 
-from ..orm import start_mappers, create_tables
+from ..infrastructure.orm import start_mappers, create_tables
 from ..models import Batch, OrderLine, InsufficientStocksException
-from ..services import allocate, is_valid_sku, InvalidSkuError
-from ..repository import SqlAlchemyRepository
+from ..services.services import allocate, is_valid_sku, InvalidSkuError
+from ..infrastructure.repository import SqlAlchemyRepository
 
 engine = create_engine(global_settings.DB_DSN)
 
@@ -37,6 +37,9 @@ def allocate_endpoint():
 
     session.commit()
     return {"batchref": batchref}, 201
+
+
+# TODO: implement deallocate endpoint
 
 
 if __name__ == "__main__":

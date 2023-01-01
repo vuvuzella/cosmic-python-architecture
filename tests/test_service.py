@@ -2,8 +2,8 @@ import pytest
 from sqlalchemy.orm import Session
 
 from models import OrderLine, Batch
-from repository import FakeRepository
-from services import allocate, InvalidSkuError
+from infrastructure.repository import FakeRepository
+from services.services import allocate, InvalidSkuError
 
 
 # tests about orchestration stuff
