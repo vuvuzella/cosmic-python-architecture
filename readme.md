@@ -10,8 +10,23 @@ from https://www.cosmicpython.com/book/preface.html
 
 Do not forget to set the python environment library in vscode so the libraries get referenced correctly
 
+To run the docker compose version:
+run `docker compose up -d`
+The db is accessible thru `localhost:5433` and the flask api app is accessible thru `localhost:5000`
+
+Current endpoints:
+
+/allocate - POST only works, accepts json body with the following structure:
+{
+    "orderid": str,
+    "sku": str,
+    "qty": int
+}
+
 # TODO:
-1. Dockerize the whole app
+1. ~~ Dockerize the whole app ~~
 2. ~~ Dockerize the data store ~~
 3. Create multiple containers of different data store
-4. Use Docker compose to orchestrate launching of the app and making containers access other containers
+4. ~~ Use Docker compose to orchestrate launching of the app and making containers access other containers ~~
+5. Create multiple containers of different application api
+6. Organize monorepo into sensible folder structure
