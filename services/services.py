@@ -22,7 +22,7 @@ def allocate(
     try:
         allocatable_batch = next(iter(sorted_allocatable_batch))
         allocatable_batch.allocate(line)
-        session.commit()
+        session.commit()  # TODO: refactor this so that application service layer is not dependent on specific DB
         return allocatable_batch
     except StopIteration:
         raise InsufficientStocksException(f"Insufficient in stock for {line.sku}")

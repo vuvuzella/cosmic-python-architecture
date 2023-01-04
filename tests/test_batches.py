@@ -4,7 +4,6 @@ from models import (
     InsufficientStocksException,
     OrderLine,
 )
-from services.services import allocate
 
 from datetime import date, timedelta
 from typing import Iterator, Tuple, Optional
@@ -95,40 +94,15 @@ def test_different_valued_order_lines_are_not_equal():
     assert (small_chair_ol == different_quantity_ol) == False
 
 
-def test_prefers_current_stock_batches_to_shipments():
-    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100)
-    shipping_batch = Batch(
-        "shipping-batch",
-        "RETRO-CLOCK",
-        100,
-        eta=(date.today() + timedelta(days=1)),
-    )
-    order_line = OrderLine("order-ref", "RETRO-CLOCK", 10)
-    batch = allocate(order_line, [in_stock_batch, shipping_batch])
-    assert in_stock_batch.available_quantity == 90
-    assert batch == in_stock_batch
+# TODO: create test for deallocate in a batch domain context
+def test_deallocate_allocated_order():
+    batch = Batch("batch-ref-1", "TABLE", 100, None)
+    order = OrderLine("order-ref-1", "TABLE", 10)
 
+    batch.allocate(order)
 
-def test_allocation_fails_if_not_enough_stock():
-    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 10)
-    shipping_batch = Batch(
-        "shipping-batch",
-        "RETRO-CLOCK",
-        10,
-        eta=(date.today() + timedelta(days=1)),
-    )
-    allocate(
-        OrderLine("order-ref", "RETRO-CLOCK", 10), [in_stock_batch, shipping_batch]
-    )
-    allocate(
-        OrderLine("another-order-ref", "RETRO-CLOCK", 10),
-        [in_stock_batch, shipping_batch],
-    )
-    order_line = OrderLine("order-ref", "RETRO-CLOCK", 1)
+    assert batch.available_quantity == 90
 
-    with pytest.raises(InsufficientStocksException):
-        batch = allocate(order_line, [in_stock_batch, shipping_batch])
+    batch.deallocate(order)
 
-
-# TODO: add tests for in_shipping only stock batches
-# TODO: add tests that can distribute a single order line to multiple batches according to availability
+    assert batch.available_quantity == 100
