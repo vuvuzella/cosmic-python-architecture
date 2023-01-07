@@ -1,6 +1,6 @@
 from models.order_line import OrderLine
 from datetime import date
-from typing import Optional, List
+from typing import Optional, Set
 
 import inspect
 
@@ -16,11 +16,7 @@ class Batch:
         self.name = name
         self._purchased_quantity = qty
         self.eta = eta
-        self._allocations: List[
-            OrderLine
-        ] = (
-            []
-        )  # TODO: create a pydantic validator to maintain uniqueness of the contents
+        self._allocations: Set[OrderLine] = set([])
 
     @property
     def available_quantity(self):

@@ -20,7 +20,7 @@ order_lines = Table(
     Column("sku", String(255)),
     Column("qty", Integer, nullable=False),
     Column("orderid", String(255)),
-    Column("parentid", Integer, ForeignKey("batch.id"), nullable=True),
+    # Column("parentid", Integer, ForeignKey("batch.id"), nullable=True),
 )
 
 batch = Table(
@@ -33,6 +33,15 @@ batch = Table(
     Column("eta", Date),
 )
 
+# This serves as the many-to-many mapping between orderline and batch
+allocations = Table(
+    "allocations",
+    metadata,
+    Column("id", Integer, primary_key=True, autoincrement=True),
+    Column("orderline_id", ForeignKey("order_lines.id")),
+    Column("batch_id", ForeignKey("batch.id")),
+)
+
 
 def create_tables(engine: Engine):
     metadata.create_all(engine)
@@ -43,5 +52,9 @@ def start_mappers():
     batch_mapper = mapper(
         Batch,
         batch,
-        properties={"_allocations": relationship(OrderLine)},
+        properties={
+            "_allocations": relationship(
+                argument=lines_mapper, secondary=allocations, collection_class=set
+            )
+        },
     )
