@@ -26,9 +26,12 @@ def allocate(
     return allocation
 
 
-# TODO: As an exercise, implement deallocate
 def deallocate(line: OrderLine, repo: AbstractRepository, session: Session):
-    raise NotImplementedError
+    batches = repo.list()
+    [batch_with_allocation] = [batch for batch in batches if batch.contains(line)]
+
+    batch_with_allocation.deallocate(line)
+    session.commit()  # TODO: refactor this so that application service layer is not dependent on the specific DB
 
 
 class InvalidSkuError(Exception):

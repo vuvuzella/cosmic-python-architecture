@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from models import OrderLine, Batch, InsufficientStocksException
 from infrastructure.repository import FakeRepository
-from services.services import allocate, InvalidSkuError
+from services.services import allocate, deallocate, InvalidSkuError
 
 
 # tests about orchestration stuff
@@ -88,6 +88,28 @@ def test_allocation_fails_if_not_enough_stock():
 
     with pytest.raises(InsufficientStocksException):
         batch = allocate(order_line, repo, sess)
+
+
+def test_deallocate_order_from_batches():
+    in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 10)
+    shipping_batch = Batch(
+        "shipping-batch",
+        "RETRO-CLOCK",
+        10,
+        eta=(date.today() + timedelta(days=1)),
+    )
+
+    first_order_clock = OrderLine("order-ref", "RETRO-CLOCK", 10)
+    shipping_batch._allocations.add(first_order_clock)
+
+    repo = FakeRepository([in_stock_batch, shipping_batch])
+    sess = FakeSession()
+
+    assert shipping_batch.contains(first_order_clock) == True
+
+    deallocate(first_order_clock, repo, sess)
+
+    assert shipping_batch.contains(first_order_clock) == False
 
 
 # TODO: add tests for in_shipping only stock batches

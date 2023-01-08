@@ -76,6 +76,9 @@ class Batch:
         else:
             raise DeallocateStocksException("Stock not allocated")
 
+    def contains(self, line: OrderLine) -> bool:
+        return set([line]).issubset(self._allocations)
+
 
 def allocate(order_line: OrderLine, batches: List[Batch]):
     sorted_allocatable_batch = [
