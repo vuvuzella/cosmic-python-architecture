@@ -1,7 +1,12 @@
 from typing import List
 from sqlalchemy.orm import Session
 
-from models import OrderLine, Batch, InsufficientStocksException
+from models import (
+    OrderLine,
+    Batch,
+    InsufficientStocksException,
+    allocate as model_allocate,
+)
 from infrastructure.repository import AbstractRepository
 
 # Seems like this module sits between the Application (API) Layer and the Domain Layer
@@ -12,20 +17,13 @@ def allocate(
     line: OrderLine, repo: AbstractRepository, session: Session
 ) -> Batch | None:
     batch = repo.list()
-    sorted_allocatable_batch = [
-        batch_item for batch_item in sorted(batch) if batch_item.can_allocate(line=line)
-    ]
 
-    if not is_valid_sku(line.sku, sorted_allocatable_batch):
+    if not is_valid_sku(line.sku, batch):
         raise InvalidSkuError(f"Invalid sku: {line.sku}")
 
-    try:
-        allocatable_batch = next(iter(sorted_allocatable_batch))
-        allocatable_batch.allocate(line)
-        session.commit()  # TODO: refactor this so that application service layer is not dependent on specific DB
-        return allocatable_batch
-    except StopIteration:
-        raise InsufficientStocksException(f"Insufficient in stock for {line.sku}")
+    allocation = model_allocate(line, batch)
+    session.commit()  # TODO: refactor this so that application service layer is not dependent on specific DB
+    return allocation
 
 
 # TODO: As an exercise, implement deallocate

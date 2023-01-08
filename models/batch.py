@@ -1,13 +1,6 @@
 from models.order_line import OrderLine
 from datetime import date
-from typing import Optional, Set
-
-import inspect
-
-
-def _get_function_name():
-    # from https://stackoverflow.com/questions/900392/getting-the-caller-function-name-inside-another-function-in-python
-    return inspect.stack()[1].function  # type: ignore
+from typing import Optional, Set, List
 
 
 class Batch:
@@ -16,7 +9,7 @@ class Batch:
         self.name = name
         self._purchased_quantity = qty
         self.eta = eta
-        self._allocations: Set[OrderLine] = set([])
+        self._allocations: Set[OrderLine] = set()
 
     @property
     def available_quantity(self):
@@ -49,8 +42,10 @@ class Batch:
     # Domain model level allocate function
     def allocate(self, line: OrderLine) -> None:
         if self.can_allocate(line):
-            if not self._order_exists(line):
-                self._allocations.append(line)
+            # if not self._order_exists(line):
+            self._allocations.add(
+                line
+            )  # I think this uses the __eq__ definition of the OrderLine
         else:
             raise InsufficientStocksException(
                 f"Unable to allocate {line.qty} of {self.name}, only {self.available_quantity} remaining "
@@ -63,11 +58,11 @@ class Batch:
             and line.sku.lower() == self.name.lower()
         )
 
-    def _order_exists(self, line: OrderLine) -> bool:
-        for order_line in self._allocations:
-            if order_line == line:
-                return True
-        return False
+    # def _order_exists(self, line: OrderLine) -> bool:
+    #     for order_line in self._allocations:
+    #         if order_line == line:
+    #             return True
+    #     return False
 
     def _can_deallocate(self, line: OrderLine) -> bool:
         for order_line in self._allocations:
@@ -80,6 +75,21 @@ class Batch:
             self._allocations.remove(line)
         else:
             raise DeallocateStocksException("Stock not allocated")
+
+
+def allocate(order_line: OrderLine, batches: List[Batch]):
+    sorted_allocatable_batch = [
+        batch_item
+        for batch_item in sorted(batches)
+        if batch_item.can_allocate(line=order_line)
+    ]
+
+    try:
+        allocatable_batch = next(iter(sorted_allocatable_batch))
+        allocatable_batch.allocate(order_line)
+        return allocatable_batch
+    except StopIteration:
+        raise InsufficientStocksException(f"Insufficient in stock for {order_line.sku}")
 
 
 class InsufficientStocksException(Exception):

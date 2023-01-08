@@ -23,8 +23,10 @@ def test_returns_allocations():
 
     repo = FakeRepository([batch])
     result = allocate(line, repo, FakeSession())
-
-    assert result == "batch-ref-1"
+    if result:
+        assert result.reference == "batch-ref-1"
+    else:
+        raise KeyError
 
 
 def test_error_for_invalid_sku():
@@ -32,7 +34,7 @@ def test_error_for_invalid_sku():
     batch = Batch("batch-ref-1", "NOT-MY-CHAIR", 100)
     repo = FakeRepository([batch])
 
-    with pytest.raises(InvalidSkuError, match="Invalid sku MY-CHAIR"):
+    with pytest.raises(InvalidSkuError, match="Invalid sku: MY-CHAIR"):
         allocate(line, repo, FakeSession())
 
 
