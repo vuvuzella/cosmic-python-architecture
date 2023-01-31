@@ -6,7 +6,7 @@ from ..settings import global_settings
 
 from ..infrastructure.orm import start_mappers, create_tables
 from ..models import Batch, OrderLine, InsufficientStocksException
-from ..services.services import allocate, is_valid_sku, InvalidSkuError
+from ..services.services import allocate, deallocate, InvalidSkuError
 from ..infrastructure.repository import SqlAlchemyRepository
 
 engine = create_engine(global_settings.DB_DSN)
@@ -39,7 +39,24 @@ def allocate_endpoint():
     return {"batchref": batchref}, 201
 
 
-# TODO: implement deallocate endpoint
+@app.route("/deallocate", methods=["POST"])
+def deallocate_endpoint():
+    session = get_session()
+
+    order_id = request.json["orderid"]  # type: ignore
+    sku = request.json["sku"]  # type: ignore
+    qty = request.json["qty"]  # type: ignore
+
+    line = OrderLine(order_id, sku, qty)
+
+    try:
+        batchref = deallocate(line, SqlAlchemyRepository(session), session)
+    except (InsufficientStocksException, InvalidSkuError) as e:
+        return {"message": str(e)}, 400
+
+    session.commit()
+    return {"batchref": batchref}, 201
+    raise NotImplementedError
 
 
 if __name__ == "__main__":

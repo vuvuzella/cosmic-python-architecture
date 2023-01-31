@@ -44,3 +44,9 @@ def session(engine: Engine, tables) -> Generator[Session, None, None]:
 def add_stock():
     # TODO: manually insert rows into database using SQL
     raise NotImplementedError
+
+
+# TODO: implement restarting the api for tests
+@pytest.fixture(scope="session")
+def restart_api():
+    return "from restart_api"

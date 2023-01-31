@@ -47,6 +47,7 @@ def create_tables(engine: Engine):
     metadata.create_all(engine)
 
 
+# TODO: Im still fuzzy in how the relationship works without its own model. How does it add orders in batches and preserve its mappings?
 def start_mappers():
     lines_mapper = mapper(OrderLine, order_lines)
     batch_mapper = mapper(
