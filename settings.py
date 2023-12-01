@@ -3,13 +3,12 @@ from typing import Dict
 
 
 class Settings(BaseSettings):
-
     # DB Connection
     DB_PROTOCOL: str = "postgresql+psycopg2"
-    DB_USERNAME: str = "docker"
-    DB_PASSWORD: str = "docker"
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5433
+    DB_USERNAME: str = "Nope"
+    DB_PASSWORD: str = "Nope"
+    DB_HOST: str = "Nope"
+    DB_PORT: int = 5435
     DB_NAME: str = "cosmic_python_db"
     # DB_DSN_QUERY: str = Field("sslmode=requre", env=[""])
     # DB_DSB: stricturl(tld_required=False, allowed_schemes={"postgresql", "postgresql+asyncpg", "postgresql+psycopg", "postgresql+psycopg2"}) = Field(None, env=[""])

@@ -9,15 +9,15 @@ services:
       POSTGRES_PASSWORD: docker
       POSTGRES_DB: cosmic_python_db
     ports:
-      - 5433:5432
+      - 5435:5432
     volumes:
       - db_volume:/var/lib/postgresql/data
   flask_api:
     image: flask_api:latest
     build: ./
     environment:
-      - DB_PORT=5432
-      - DB_HOST=db
+      - DB_PORT=5435
+      - DB_HOST=db # this is the way to reference another service's hostname
     ports:
       - 5000:5000
     volumes:

@@ -4,7 +4,7 @@ import argparse
 import shutil
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Generator
 
 BLOCKSIZE = 65536
 
@@ -34,20 +34,20 @@ def determine_actions(
     destination_hashes: Dict[str, str],
     source: str,
     destination: str,
-) -> Tuple[str, str, str]:
+) -> Generator[Tuple[str, str, str | None], None, None]:
     for sha, fn in source_hashes.items():
         if sha not in destination_hashes:
             source_path = Path(source) / fn
             destination_path = Path(destination) / fn
-            yield ("COPY", source_path, destination_path)
+            yield ("COPY", str(source_path), str(destination_path))
         elif destination_hashes[sha] != fn:
             old_destination_path = Path(destination) / destination_hashes[sha]
             new_destination_path = Path(destination) / fn
-            yield ("MOVE", old_destination_path, new_destination_path)
+            yield ("MOVE", str(old_destination_path), str(new_destination_path))
 
     for sha, fn in destination_hashes.items():
         if sha not in source_hashes:
-            yield ("DELETE", Path(destination) / fn, None)
+            yield ("DELETE", str(Path(destination) / fn), None)
 
 
 class FileSystem:

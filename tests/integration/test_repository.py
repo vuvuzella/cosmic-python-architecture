@@ -86,7 +86,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(
     expected = Batch("batch-one", "GENERIC-SOFA", 100, eta=None)
     assert retrieved == expected
     assert retrieved.name == expected.name
-    assert retrieved._purchased_quantity == expected._purchased_quantity
+    assert retrieved.available_quantity == expected.available_quantity
     assert retrieved._allocations == set([OrderLine("order-one", "GENERIC-SOFA", 12)])
 
 

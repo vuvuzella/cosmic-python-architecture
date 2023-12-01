@@ -16,10 +16,15 @@ sqlmodel = "^0.0.8"
 psycopg2-binary = "^2.9.5"
 flask = "^2.2.2"
 requests = "^2.28.1"
+sqlalchemy-serializer = "^1.4.1"
 
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.0"
+alembic = "^1.12.1"
+ptpython = "^3.0.23"
+jupyter = "^1.0.0"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]

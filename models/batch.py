@@ -1,15 +1,27 @@
-from models.order_line import OrderLine
+from dataclasses import dataclass, asdict, field
 from datetime import date
-from typing import Optional, Set, List
+from typing import Any, Optional, Set, List
+import json
+
+from sqlalchemy_serializer import SerializerMixin
+
+from models.order_line import OrderLine
 
 
-class Batch:
+@dataclass
+class Batch(SerializerMixin):
+    reference: str
+    name: str
+    _purchased_quantity: int
+    eta: date | None
+    _allocations: Set[OrderLine]
+
     def __init__(self, reference: str, name: str, qty: int, eta: Optional[date] = None):
         self.reference = reference
         self.name = name
         self._purchased_quantity = qty
         self.eta = eta
-        self._allocations: Set[OrderLine] = set()
+        self._allocations = set()
 
     @property
     def available_quantity(self):
@@ -58,12 +70,6 @@ class Batch:
             and line.sku.lower() == self.name.lower()
         )
 
-    # def _order_exists(self, line: OrderLine) -> bool:
-    #     for order_line in self._allocations:
-    #         if order_line == line:
-    #             return True
-    #     return False
-
     def _can_deallocate(self, line: OrderLine) -> bool:
         for order_line in self._allocations:
             if order_line == line:
@@ -83,16 +89,33 @@ class Batch:
 def allocate(order_line: OrderLine, batches: List[Batch]):
     sorted_allocatable_batch = [
         batch_item
-        for batch_item in sorted(batches)
+        for batch_item in sorted(batches)  # also uses hash to sort by reference?
         if batch_item.can_allocate(line=order_line)
     ]
 
     try:
+        # allocates to the next
         allocatable_batch = next(iter(sorted_allocatable_batch))
         allocatable_batch.allocate(order_line)
         return allocatable_batch
     except StopIteration:
         raise InsufficientStocksException(f"Insufficient in stock for {order_line.sku}")
+
+
+def deallocate(order_line: OrderLine, batches: List[Batch]):
+    sorted_deallocatable_batch = [
+        batch_item for batch_item in batches if batch_item._can_deallocate(order_line)
+    ]
+
+    try:
+        deallocated_batch = next(iter(sorted_deallocatable_batch))
+        deallocated_batch.deallocate(order_line)
+        return deallocated_batch
+    except StopIteration:
+        # the list is exhausted, no batches can deallocate
+        raise DeallocateStocksException(
+            f"No batches available to allovate orderline {order_line.orderid}"
+        )
 
 
 class InsufficientStocksException(Exception):

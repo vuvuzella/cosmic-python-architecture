@@ -1,37 +1,58 @@
 from typing import List
-from sqlalchemy.orm import Session
+from datetime import date
 
 from models import (
     OrderLine,
     Batch,
-    InsufficientStocksException,
     allocate as model_allocate,
+    deallocate as model_deallocate,
 )
-from infrastructure.repository import AbstractRepository
+from services import AbstractUnitOfWork
 
 # Seems like this module sits between the Application (API) Layer and the Domain Layer
 # This is used by the application (API) layer to perform domain verbs/actions
 
 
 def allocate(
-    line: OrderLine, repo: AbstractRepository, session: Session
-) -> Batch | None:
-    batch = repo.list()
+    # line: OrderLine, repo: AbstractRepository, session: Session
+    order_id: str,
+    sku: str,
+    quantity: int,
+    uow: AbstractUnitOfWork,
+) -> Batch:
+    line = OrderLine(order_id, sku, quantity)
 
-    if not is_valid_sku(line.sku, batch):
-        raise InvalidSkuError(f"Invalid sku: {line.sku}")
+    with uow:
+        batch = uow.batches.list()
 
-    allocation = model_allocate(line, batch)
-    session.commit()  # TODO: refactor this so that application service layer is not dependent on specific DB
-    return allocation
+        if not is_valid_sku(line.sku, batch):
+            raise InvalidSkuError(f"Invalid sku: {line.sku}")
+
+        allocation = model_allocate(line, batch)
+        uow.commit()  # commit refers to the abstract uow commit, not from a db connector
+
+        return allocation
 
 
-def deallocate(line: OrderLine, repo: AbstractRepository, session: Session):
-    batches = repo.list()
-    [batch_with_allocation] = [batch for batch in batches if batch.contains(line)]
+def deallocate(orderid: str, sku: str, qty: int, uow: AbstractUnitOfWork):
+    line = OrderLine(orderid=orderid, sku=sku, qty=qty)
+    with uow:
+        batch = uow.batches.list()
+        if not is_valid_sku(line.sku, batch):
+            raise InvalidSkuError(f"Invalid sku: {line.sku}")
+        deallocated_batch = model_deallocate(order_line=line, batches=batch)
+        uow.commit()
+        return deallocated_batch
 
-    batch_with_allocation.deallocate(line)
-    session.commit()  # TODO: refactor this so that application service layer is not dependent on the specific DB
+
+def restock(
+    reference: str, name: str, qty: int, eta: date | None, uow: AbstractUnitOfWork
+):
+    batch = Batch(reference=reference, name=name, qty=qty, eta=eta)
+    with uow:
+        uow.batches.add(batch=batch)
+        uow.commit()
+        return batch
 
 
 class InvalidSkuError(Exception):

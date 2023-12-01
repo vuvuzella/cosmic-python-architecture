@@ -1,8 +1,9 @@
 from dataclasses import dataclass
+from sqlalchemy_serializer import SerializerMixin
 
 
 @dataclass(frozen=False)
-class OrderLine:
+class OrderLine(SerializerMixin):
     orderid: str
     sku: str
     qty: int

@@ -1,4 +1,4 @@
-from abc import ABC, abstractclassmethod
+from abc import ABC, abstractmethod
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,21 +9,24 @@ from models import Batch
 # The idea is to separate the database access specific functions from the model themselves.
 # Repositories should never know about the model
 
+
 # TODO: use python generics to generalize this one
 class AbstractRepository(ABC):
-    @abstractclassmethod
+    @abstractmethod
     def add(self, batch: Batch):
         raise NotImplementedError
 
-    @abstractclassmethod
+    @abstractmethod
     def get(self, reference) -> Batch:
         raise NotImplementedError
 
-    @abstractclassmethod
+    @abstractmethod
     def list(self) -> list[Batch]:
         raise NotImplementedError
 
 
+# How can we make this generic to have repository of any entity in
+# our database?
 class SqlAlchemyRepository(AbstractRepository):
     def __init__(self, session: Session) -> None:
         super().__init__()
@@ -40,9 +43,9 @@ class SqlAlchemyRepository(AbstractRepository):
 
 
 class FakeRepository(AbstractRepository):
-    def __init__(self, batches: List[Batch]) -> None:
-        super().__init__()
+    def __init__(self, batches: List[Batch] = []) -> None:
         self._batches = batches
+        super().__init__()
 
     # TODO: no uniqueness validation or check!
     def add(self, batch) -> None:

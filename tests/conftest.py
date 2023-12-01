@@ -40,6 +40,16 @@ def session(engine: Engine, tables) -> Generator[Session, None, None]:
     connection.close
 
 
+# Scope controls the level at which the decorated function will execute
+# 4 scopes: function, class, module, session
+# The number of times a fixture gets executed depends on the scope
+# The default scope is function, hence every function that has the fixture as its dependency, it will be executeddef
+# A scope of "session" will only run the fixture once, every time "pytest" is executed
+@pytest.fixture(scope="session")
+def some_fixture():
+    print("executing a session scoped fixture...")
+
+
 @pytest.fixture(scope="session")
 def add_stock():
     # TODO: manually insert rows into database using SQL
