@@ -12,6 +12,17 @@ services:
       - 5435:5432
     volumes:
       - db_volume:/var/lib/postgresql/data
+  db_test:
+    image: postgres:14.6
+    restart: always
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: cosmic_python_db_test
+    ports:
+      - 5436:5432
+    volumes:
+      - db_volume:/var/lib/postgresql/cosmic_python_db_test
   flask_api:
     image: flask_api:latest
     build: ./
