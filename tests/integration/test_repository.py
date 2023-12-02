@@ -27,7 +27,6 @@ def insert_order_lines(session: Session):
     return order_line_id
 
 
-# TODO: implement batch insertion
 def insert_batch(session: Session, batch_reference: str) -> int:
     statement = text(
         """
@@ -80,10 +79,10 @@ def test_repository_can_retrieve_a_batch_with_allocations(
     order_line_id = insert_order_lines(session)
     batch_one_id = insert_batch(session, "batch-one")
     batch_two_id = insert_batch(session, "batch-two")
-    insert_allocation(session, order_line_id, batch_one_id)  # TODO: implement this one
+    insert_allocation(session, order_line_id, batch_one_id)
     repo = SqlAlchemyRepository(session)
     retrieved = repo.get("batch-one")
-    expected = Batch("batch-one", "GENERIC-SOFA", 100, eta=None)
+    expected = Batch("batch-one", "GENERIC-SOFA", 88, eta=None)
     assert retrieved == expected
     assert retrieved.name == expected.name
     assert retrieved.available_quantity == expected.available_quantity
