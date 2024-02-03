@@ -2,9 +2,9 @@ from models import (
     Batch,
     DeallocateStocksException,
     InsufficientStocksException,
-    OrderLine,
+    Orderline,
     allocate,
-    deallocate
+    deallocate,
 )
 
 from datetime import date, timedelta
@@ -15,11 +15,12 @@ import pytest
 
 def create_test_components(
     sku: str, batch_qty: int, line_qty: int, eta: Optional[date] = date.today()
-) -> Tuple[Batch, OrderLine]:
+) -> Tuple[Batch, Orderline]:
     return (
         Batch("batch-001", sku, qty=batch_qty, eta=eta),
-        OrderLine("order-ref", sku, line_qty),
+        Orderline("order-ref", sku, line_qty),
     )
+
 
 @pytest.mark.skip
 def test_allocating_to_a_batch_reduces_available_quantity():
@@ -75,15 +76,15 @@ def test_can_allocate_same_lines_multiple_times_without_double_accounting():
     batch.allocate(line)
     assert batch.available_quantity == 15
 
-    new_line_order = OrderLine("order-002", "SIMPLE-CHAIR", 5)
+    new_line_order = Orderline("order-002", "SIMPLE-CHAIR", 5)
     batch.allocate(new_line_order)
     assert batch.available_quantity == 10
 
 
 @pytest.mark.skip
 def test_same_valued_order_lines_are_equal():
-    line1 = OrderLine("order-ref-1", "SMALL-CHAIR", 10)
-    line2 = OrderLine("order-ref-1", "SMALL-CHAIR", 10)
+    line1 = Orderline("order-ref-1", "SMALL-CHAIR", 10)
+    line2 = Orderline("order-ref-1", "SMALL-CHAIR", 10)
     assert (line1 == line2) == True
 
 
@@ -94,18 +95,18 @@ def test_different_valued_order_lines_are_not_equal():
     qty_ten = 10
     qty_five = 5
 
-    small_chair_ol = OrderLine(order_ref_one, "SMALL-CHAIR", qty_ten)
-    large_chair_ol = OrderLine(order_ref_one, "LARGE-CHAIR", qty_ten)
+    small_chair_ol = Orderline(order_ref_one, "SMALL-CHAIR", qty_ten)
+    large_chair_ol = Orderline(order_ref_one, "LARGE-CHAIR", qty_ten)
     assert (small_chair_ol == large_chair_ol) == False
-    new_small_chair_ol = OrderLine(order_ref_two, "SMALL-CHAIR", qty_ten)
+    new_small_chair_ol = Orderline(order_ref_two, "SMALL-CHAIR", qty_ten)
     assert (small_chair_ol == new_small_chair_ol) == False
-    different_quantity_ol = OrderLine(order_ref_one, "SMALL-CHAIR", qty_five)
+    different_quantity_ol = Orderline(order_ref_one, "SMALL-CHAIR", qty_five)
     assert (small_chair_ol == different_quantity_ol) == False
 
 
 def test_deallocate_allocated_order():
     batch = Batch("batch-ref-1", "TABLE", 100, None)
-    order = OrderLine("order-ref-1", "TABLE", 10)
+    order = Orderline("order-ref-1", "TABLE", 10)
 
     batch.allocate(order)
 
@@ -116,5 +117,3 @@ def test_deallocate_allocated_order():
     assert batch == deallocated_batch
     assert batch.available_quantity == deallocated_batch.available_quantity
     assert deallocated_batch.available_quantity == 100
-
-

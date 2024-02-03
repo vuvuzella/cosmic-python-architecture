@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
 
-from models import OrderLine, Batch, InsufficientStocksException
+from models import Orderline, Batch, InsufficientStocksException
 from infrastructure.repository import FakeRepository
 from services.services import allocate, deallocate, InvalidSkuError
 from services import FakeUnitOfWork
@@ -39,7 +39,7 @@ def test_returns_allocations():
 
 
 def test_error_for_invalid_sku():
-    line = OrderLine("order1", "MY-CHAIR", 10)
+    line = Orderline("order1", "MY-CHAIR", 10)
     batch = Batch("batch-ref-1", "NOT-MY-CHAIR", 100)
     uow = FakeUnitOfWork([batch])
 
@@ -56,7 +56,7 @@ def test_prefers_current_stock_batches_to_shipments():
         eta=(date.today() + timedelta(days=1)),
     )
     uow = FakeUnitOfWork([in_stock_batch, shipping_batch])
-    order_line = OrderLine("order-ref", "RETRO-CLOCK", 10)
+    order_line = Orderline("order-ref", "RETRO-CLOCK", 10)
     batch = allocate(
         order_id=order_line.orderid,
         sku=order_line.sku,
@@ -78,7 +78,7 @@ def test_allocation_fails_if_not_enough_stock():
 
     uow = FakeUnitOfWork([in_stock_batch, shipping_batch])
 
-    first_order_clock = OrderLine("order-ref", "RETRO-CLOCK", 10)
+    first_order_clock = Orderline("order-ref", "RETRO-CLOCK", 10)
 
     allocate(
         order_id=first_order_clock.orderid,
@@ -87,7 +87,7 @@ def test_allocation_fails_if_not_enough_stock():
         uow=uow,
     )
 
-    second_order_clock = OrderLine("another-order-ref", "RETRO-CLOCK", 10)
+    second_order_clock = Orderline("another-order-ref", "RETRO-CLOCK", 10)
 
     allocate(
         order_id=second_order_clock.orderid,
@@ -96,7 +96,7 @@ def test_allocation_fails_if_not_enough_stock():
         uow=uow,
     )
 
-    order_line = OrderLine("order-ref", "RETRO-CLOCK", 1)
+    order_line = Orderline("order-ref", "RETRO-CLOCK", 1)
 
     with pytest.raises(InsufficientStocksException):
         batch = allocate(
@@ -118,7 +118,7 @@ def test_allocate_in_shipping_batches_only():
         eta=(date.today() + timedelta(days=1)),
     )
     uow = FakeUnitOfWork([delayed_shipping_batch, shipping_batch])
-    first_order_clock = OrderLine("order-ref", "RETRO-CLOCK", 10)
+    first_order_clock = Orderline("order-ref", "RETRO-CLOCK", 10)
 
     allocate(
         order_id=first_order_clock.orderid,
@@ -143,9 +143,9 @@ def test_allocate_order_next_available_batch():
     )
     uow = FakeUnitOfWork([delayed_shipping_batch, shipping_batch])
 
-    first_order_clock = OrderLine("order-1-ref", "RETRO-CLOCK", 10)
-    second_order_clock = OrderLine("order-2-ref", "RETRO-CLOCK", 10)
-    third_order_clock = OrderLine("order-2-ref", "RETRO-CLOCK", 10)
+    first_order_clock = Orderline("order-1-ref", "RETRO-CLOCK", 10)
+    second_order_clock = Orderline("order-2-ref", "RETRO-CLOCK", 10)
+    third_order_clock = Orderline("order-2-ref", "RETRO-CLOCK", 10)
 
     allocate(
         order_id=first_order_clock.orderid,
@@ -176,7 +176,7 @@ def test_allocate_idemptotent_allocation():
     batch_1 = Batch("batch-1-ref", "RETRO-CLOCK", 10)
     batch_2 = Batch("batch-2-ref", "RETRO-CLOCK", 20)
 
-    order_line = OrderLine("order-1-ref", "RETRO-CLOCK", 5)
+    order_line = Orderline("order-1-ref", "RETRO-CLOCK", 5)
 
     uow = FakeUnitOfWork([batch_1, batch_2])
 
@@ -190,7 +190,7 @@ def test_allocate_idemptotent_allocation():
     assert batch_1.allocated_quantity == order_line.qty
     assert batch_2.allocated_quantity == 0
 
-    order_line_2 = OrderLine("order-2-ref", "RETRO-CLOCK", 5)
+    order_line_2 = Orderline("order-2-ref", "RETRO-CLOCK", 5)
 
     allocate(order_line_2.orderid, order_line_2.sku, order_line_2.qty, uow)
 
@@ -210,7 +210,7 @@ def test_deallocate_order_from_batches():
         eta=(date.today() + timedelta(days=1)),
     )
 
-    first_order_clock = OrderLine("order-ref", "RETRO-CLOCK", 10)
+    first_order_clock = Orderline("order-ref", "RETRO-CLOCK", 10)
     shipping_batch._allocations.add(first_order_clock)
 
     uow = FakeUnitOfWork([in_stock_batch, shipping_batch])

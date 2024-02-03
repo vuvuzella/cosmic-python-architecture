@@ -1,4 +1,4 @@
-from models import OrderLine
+from models import Orderline
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
@@ -16,16 +16,16 @@ def test_orderline_mapper_can_load_lines(session: Session):
     session.execute(sql_statement)
 
     expected = [
-        OrderLine("order1", "RED-CHAIR", 12),
-        OrderLine("order2", "RED-TABLE", 13),
-        OrderLine("order3", "BLUE-LIPSTICK", 14),
+        Orderline("order1", "RED-CHAIR", 12),
+        Orderline("order2", "RED-TABLE", 13),
+        Orderline("order3", "BLUE-LIPSTICK", 14),
     ]
 
-    assert session.query(OrderLine).all() == expected
+    assert session.query(Orderline).all() == expected
 
 
 def test_orderline_mapper_can_save_lines(session: Session):
-    new_line = OrderLine("order1", "DECORATIVE-WIDGET", 12)
+    new_line = Orderline("order1", "DECORATIVE-WIDGET", 12)
     session.add(new_line)
     session.commit()
 

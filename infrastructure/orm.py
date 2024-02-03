@@ -4,7 +4,7 @@ from sqlalchemy.engine import Engine
 from typing import Set
 
 # the ORM imports the domain model, not the other way around
-from models import OrderLine, Batch
+from models import Orderline, Batch
 
 import logging
 
@@ -49,7 +49,7 @@ def create_tables(engine: Engine):
 
 # TODO: Im still fuzzy in how the relationship works without its own model. How does it add orders in batches and preserve its mappings?
 def start_mappers():
-    lines_mapper = mapper(OrderLine, order_lines)
+    lines_mapper = mapper(Orderline, order_lines)
     batch_mapper = mapper(
         Batch,
         batch,

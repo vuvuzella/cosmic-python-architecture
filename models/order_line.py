@@ -3,13 +3,13 @@ from sqlalchemy_serializer import SerializerMixin
 
 
 @dataclass(frozen=False)
-class OrderLine(SerializerMixin):
+class Orderline(SerializerMixin):
     orderid: str
     sku: str
     qty: int
 
     def __eq__(self, __o: object) -> bool:
-        if not isinstance(__o, OrderLine):
+        if not isinstance(__o, Orderline):
             return False
         return self.__hash__() == __o.__hash__()
 

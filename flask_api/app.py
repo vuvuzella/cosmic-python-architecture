@@ -12,7 +12,7 @@ from infrastructure.repository import SqlAlchemyRepository
 from services.services import allocate, deallocate, restock, InvalidSkuError
 from services.unit_of_work import SqlAlchemyUnitOfWork
 
-from models import Batch, OrderLine, InsufficientStocksException
+from models import Batch, Orderline, InsufficientStocksException
 
 engine = create_engine(global_settings.DB_DSN)
 
@@ -24,19 +24,19 @@ start_mappers()
 get_session = sessionmaker(bind=engine)
 app = Flask(__name__)
 
+
 @app.route("/batches", methods=["GET"])
 def get_batches_endpoint():
-
     session = get_session()
     repo = SqlAlchemyRepository(session)
 
-    batches = [ batch for batch in repo.list() ]
+    batches = [batch for batch in repo.list()]
 
     return {"batches": batches}, 200
 
+
 @app.route("/allocate", methods=["POST"])
 def allocate_endpoint():
-
     order_id = request.json["orderid"]  # type: ignore
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
@@ -53,7 +53,6 @@ def allocate_endpoint():
 
 @app.route("/deallocate", methods=["POST"])
 def deallocate_endpoint():
-
     order_id = request.json["orderid"]  # type: ignore
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
@@ -70,7 +69,6 @@ def deallocate_endpoint():
 
 @app.route("/restock", methods=["POST"])
 def restock_endpoint():
-
     body = json.loads(request.get_data(as_text=True))
 
     reference = body.get("reference")
@@ -81,7 +79,6 @@ def restock_endpoint():
     uow = SqlAlchemyUnitOfWork()
 
     try:
-
         batch = restock(reference=reference, name=name, qty=qty, eta=eta, uow=uow)
 
         return {"batchref": batch.to_dict()}, 200

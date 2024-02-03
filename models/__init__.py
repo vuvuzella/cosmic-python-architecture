@@ -3,6 +3,6 @@ from .batch import (
     InsufficientStocksException,
     DeallocateStocksException,
     allocate,
-    deallocate
+    deallocate,
 )
-from .order_line import OrderLine
+from .order_line import Orderline

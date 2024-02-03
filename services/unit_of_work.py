@@ -1,10 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Generic, TypeVar, Type
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from infrastructure import AbstractRepository, SqlAlchemyRepository, FakeRepository
+from infrastructure import (
+    AbstractRepository,
+    SqlAlchemyRepository,
+    FakeRepository,
+    ProductRepository,
+    BatchRepository,
+)
 from models import Batch
 from settings import global_settings
 
@@ -12,10 +18,10 @@ DEFAULT_SESSION_FACTORY = sessionmaker(
     bind=create_engine(url=global_settings.DB_DSN), expire_on_commit=False
 )
 
+RepositoryT = TypeVar("RepositoryT", bound=AbstractRepository)
+
 
 class AbstractUnitOfWork(ABC):
-    batches: AbstractRepository
-
     @abstractmethod
     def rollback(self):
         raise NotImplementedError
@@ -33,11 +39,17 @@ class AbstractUnitOfWork(ABC):
         raise NotImplementedError
 
 
-class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
+class SqlAlchemyUnitOfWork(AbstractUnitOfWork, Generic[RepositoryT]):
     """
     This contains the units of work that needs to be done
     given that the storage is SQL Alchemy
     """
+
+    repository: RepositoryT
+
+    @property
+    def _repository(self) -> Type[RepositoryT]:
+        ...
 
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY) -> None:
         self.session_factory = session_factory
@@ -47,7 +59,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         This UoW can be used as a context manager
         """
         self.session = self.session_factory()
-        self.batches = SqlAlchemyRepository(self.session)
+        self.repository = self._repository(self.session)
 
     def __exit__(self, *args):
         self.session.close()
@@ -59,9 +71,21 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session.commit()
 
 
+class ProductUnitOfWork(SqlAlchemyUnitOfWork[ProductRepository]):
+    @property
+    def _repository(self) -> Type[ProductRepository]:
+        return ProductRepository
+
+
+class BatchUnitOfWork(SqlAlchemyUnitOfWork[BatchRepository]):
+    @property
+    def _repository(self) -> Type[BatchRepository]:
+        return BatchRepository
+
+
 class FakeUnitOfWork(AbstractUnitOfWork):
     def __init__(self, batches: List[Batch] = []) -> None:
-        self.batches = FakeRepository(batches)
+        self.repository = FakeRepository(batches)
         super().__init__()
 
     def rollback(self):

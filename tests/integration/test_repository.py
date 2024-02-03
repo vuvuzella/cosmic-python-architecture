@@ -1,4 +1,4 @@
-from models import Batch, OrderLine
+from models import Batch, Orderline
 
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
@@ -86,7 +86,7 @@ def test_repository_can_retrieve_a_batch_with_allocations(
     assert retrieved == expected
     assert retrieved.name == expected.name
     assert retrieved.available_quantity == expected.available_quantity
-    assert retrieved._allocations == set([OrderLine("order-one", "GENERIC-SOFA", 12)])
+    assert retrieved._allocations == set([Orderline("order-one", "GENERIC-SOFA", 12)])
 
 
 def test_repository_can_save_a_batch(session: Session):
