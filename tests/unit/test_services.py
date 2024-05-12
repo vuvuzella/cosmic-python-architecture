@@ -1,14 +1,17 @@
-import pytest
-from typing import List
-from sqlalchemy.orm import Session
 from datetime import date, timedelta
+from typing import List
 
-from models import Orderline, Batch, InsufficientStocksException
+import pytest
+from sqlalchemy.orm import Session
+
+from domain.models import Batch, InsufficientStocksException, Orderline
 from infrastructure.repository import FakeRepository
-from services.services import allocate, deallocate, InvalidSkuError
 from services import FakeUnitOfWork
+from services.services import InvalidSkuError, allocate, deallocate
 
 # tests about orchestration stuff
+
+# TODO: Fix tests
 
 
 class FakeSession(Session):

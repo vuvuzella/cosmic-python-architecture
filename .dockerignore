@@ -4,4 +4,4 @@
 .venv
 
 copy
-persistent_store
+.persistent_store

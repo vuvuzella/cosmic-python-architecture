@@ -2,6 +2,6 @@
 .pytest_cache
 __pycache__
 .vscode
-persistent_store
+.persistent_store
 .coverage
 pytest.ini

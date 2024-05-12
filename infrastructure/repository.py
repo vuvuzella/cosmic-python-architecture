@@ -1,16 +1,19 @@
 from abc import ABC, abstractmethod
-from sqlalchemy.orm import Session
-from typing import List, TypeVar, Generic, Any
+from typing import Any, Generic, List, TypeVar, Union
 
-from models import Batch
-from aggregates import Product
+from sqlalchemy.orm import Session
+
+from domain.aggregates import Product
+from domain.aggregates.base import AbstractAggregate
+from domain.models import Batch
+from domain.models.base import Entity
 
 # This module encapsulates the way of communicating with a specific database by means of an interface
 # which in this case, is the AbstractRepository.
 # The idea is to separate the database access specific functions from the model themselves.
 # Repositories should never know about the model
 
-AggregateT = TypeVar("AggregateT")
+AggregateT = TypeVar("AggregateT", bound=Union[AbstractAggregate, Entity])
 EntityT = TypeVar("EntityT")
 
 
@@ -29,7 +32,10 @@ class AbstractRepository(ABC):
 
 
 class SqlAlchemyRepository(AbstractRepository, Generic[AggregateT]):
-    aggregates: AggregateT
+    """Generic Sql Alchemy repository
+    usually this should return an aggregate
+    aggregates are entrypoints to entities
+    """
 
     def __init__(self, session: Session) -> None:
         super().__init__()

@@ -1,24 +1,24 @@
 from abc import ABC, abstractmethod
-from typing import List, Generic, TypeVar, Type
+from typing import Generic, List, Type, TypeVar
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from domain.models import Batch
 from infrastructure import (
     AbstractRepository,
-    SqlAlchemyRepository,
+    BatchRepository,
     FakeRepository,
     ProductRepository,
-    BatchRepository,
+    SqlAlchemyRepository,
 )
-from models import Batch
 from settings import global_settings
 
 DEFAULT_SESSION_FACTORY = sessionmaker(
     bind=create_engine(url=global_settings.DB_DSN), expire_on_commit=False
 )
 
-RepositoryT = TypeVar("RepositoryT", bound=AbstractRepository)
+RepositoryT = TypeVar("RepositoryT", bound=SqlAlchemyRepository)
 
 
 class AbstractUnitOfWork(ABC):
@@ -27,7 +27,7 @@ class AbstractUnitOfWork(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def commit(self):
+    def _commit(self):
         raise NotImplementedError
 
     @abstractmethod
@@ -66,6 +66,9 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork, Generic[RepositoryT]):
 
     def rollback(self):
         self.session.rollback()
+
+    def _commit(self):
+        return self.commit()
 
     def commit(self):
         self.session.commit()

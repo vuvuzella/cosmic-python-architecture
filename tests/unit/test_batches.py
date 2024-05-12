@@ -1,4 +1,9 @@
-from models import (
+from datetime import date, timedelta
+from typing import Iterator, Optional, Tuple
+
+import pytest
+
+from domain.models import (
     Batch,
     DeallocateStocksException,
     InsufficientStocksException,
@@ -6,11 +11,6 @@ from models import (
     allocate,
     deallocate,
 )
-
-from datetime import date, timedelta
-from typing import Iterator, Tuple, Optional
-
-import pytest
 
 
 def create_test_components(

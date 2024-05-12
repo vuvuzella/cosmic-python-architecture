@@ -1,12 +1,12 @@
-from sqlalchemy.orm import mapper, relationship
-from sqlalchemy import Table, MetaData, Column, Integer, String, Date, ForeignKey, event
-from sqlalchemy.engine import Engine
+import logging
 from typing import Set
 
-# the ORM imports the domain model, not the other way around
-from models import Orderline, Batch
+from sqlalchemy import Column, Date, ForeignKey, Integer, MetaData, String, Table, event
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import mapper, relationship
 
-import logging
+# the ORM imports the domain model, not the other way around
+from domain.models import Batch, Orderline
 
 logger = logging.getLogger(__name__)
 

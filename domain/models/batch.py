@@ -1,20 +1,22 @@
-from dataclasses import dataclass, asdict, field
-from datetime import date
-from typing import Any, Optional, Set, List
 import json
+from dataclasses import asdict, dataclass, field
+from datetime import date
+from typing import Any, List, Optional, Set
 
 from sqlalchemy_serializer import SerializerMixin
 
-from models.order_line import Orderline
+from domain.models.base import Entity
 
 
 @dataclass
-class Batch(SerializerMixin):
+class Batch(Entity, SerializerMixin):
     reference: str
     name: str
     _purchased_quantity: int
     eta: date | None
-    _allocations: Set[Orderline]
+    # TODO: make type hints work without causing circular dependencies
+    # in the application
+    _allocations: Set["Orderline"]
 
     def __init__(self, reference: str, name: str, qty: int, eta: Optional[date] = None):
         self.reference = reference
@@ -52,7 +54,7 @@ class Batch(SerializerMixin):
         return hash(self.reference)
 
     # Domain model level allocate function
-    def allocate(self, line: Orderline) -> None:
+    def allocate(self, line: "Orderline") -> None:
         if self.can_allocate(line):
             # if not self._order_exists(line):
             self._allocations.add(
@@ -64,13 +66,13 @@ class Batch(SerializerMixin):
             )
 
     # business validation
-    def can_allocate(self, line: Orderline) -> bool:
+    def can_allocate(self, line: "Orderline") -> bool:
         return (
             self.available_quantity - line.qty >= 0
             and line.sku.lower() == self.name.lower()
         )
 
-    def _can_deallocate(self, line: Orderline) -> bool:
+    def _can_deallocate(self, line: "Orderline") -> bool:
         for order_line in self._allocations:
             if order_line == line:
                 return True
@@ -82,11 +84,11 @@ class Batch(SerializerMixin):
         else:
             raise DeallocateStocksException("Stock not allocated")
 
-    def contains(self, line: Orderline) -> bool:
+    def contains(self, line: "Orderline") -> bool:
         return set([line]).issubset(self._allocations)
 
 
-def allocate(order_line: Orderline, batches: List[Batch]):
+def allocate(order_line: "Orderline", batches: List[Batch]):
     sorted_allocatable_batch = [
         batch_item
         for batch_item in sorted(batches)  # also uses hash to sort by reference?
@@ -102,7 +104,7 @@ def allocate(order_line: Orderline, batches: List[Batch]):
         raise InsufficientStocksException(f"Insufficient in stock for {order_line.sku}")
 
 
-def deallocate(order_line: Orderline, batches: List[Batch]):
+def deallocate(order_line: "Orderline", batches: List[Batch]):
     sorted_deallocatable_batch = [
         batch_item for batch_item in batches if batch_item._can_deallocate(order_line)
     ]

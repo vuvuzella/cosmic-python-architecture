@@ -1,7 +1,7 @@
-from models import Batch, Orderline
-
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+
+from domain.models import Batch, Orderline
 from infrastructure.repository import SqlAlchemyRepository
 
 

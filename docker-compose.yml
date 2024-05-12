@@ -42,4 +42,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: ${PWD}/persistent_store/db_volume
+      device: ${PWD}/.persistent_store/db_volume

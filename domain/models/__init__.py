@@ -1,7 +1,7 @@
 from .batch import (
     Batch,
-    InsufficientStocksException,
     DeallocateStocksException,
+    InsufficientStocksException,
     allocate,
     deallocate,
 )

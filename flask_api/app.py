@@ -1,18 +1,17 @@
 import json
 from dataclasses import asdict
+
+import uvicorn
 from flask import Flask, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from settings import global_settings
-
-from infrastructure.orm import start_mappers, create_tables
+from domain.models import InsufficientStocksException
+from infrastructure.orm import create_tables, start_mappers
 from infrastructure.repository import SqlAlchemyRepository
-
-from services.services import allocate, deallocate, restock, InvalidSkuError
-from services.unit_of_work import SqlAlchemyUnitOfWork
-
-from models import Batch, Orderline, InsufficientStocksException
+from services.services import InvalidSkuError, allocate, deallocate, restock
+from services.unit_of_work import BatchUnitOfWork, ProductUnitOfWork
+from settings import global_settings
 
 engine = create_engine(global_settings.DB_DSN)
 
@@ -41,7 +40,7 @@ def allocate_endpoint():
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
 
-    uow = SqlAlchemyUnitOfWork()
+    uow = BatchUnitOfWork()
 
     try:
         batchref = allocate(order_id=order_id, sku=sku, quantity=qty, uow=uow)
@@ -57,7 +56,7 @@ def deallocate_endpoint():
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
 
-    uow = SqlAlchemyUnitOfWork()
+    uow = BatchUnitOfWork()
 
     try:
         batchref = deallocate(orderid=order_id, sku=sku, qty=qty, uow=uow)
@@ -76,7 +75,7 @@ def restock_endpoint():
     qty = body.get("qty")
     eta = body.get("eta")
 
-    uow = SqlAlchemyUnitOfWork()
+    uow = BatchUnitOfWork()
 
     try:
         batch = restock(reference=reference, name=name, qty=qty, eta=eta, uow=uow)
@@ -87,5 +86,17 @@ def restock_endpoint():
         return {"message": str(e)}, 400
 
 
+def start():
+    # $ poetry run uvicorn flask_api.app:start --host=0.0.0.0 --port=8000 --reload
+    uvicorn.run(
+        app=app,
+        host="0.0.0.0",
+        port=8000,
+        loop="uvloop",
+        proxy_headers=True,
+        forwarded_allow_ips="*",
+    )
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    start()

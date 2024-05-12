@@ -1,13 +1,13 @@
 from typing import List, Optional
 from datetime import date
 
-from models import (
+from domain.models import (
     Orderline,
     Batch,
     allocate as model_allocate,
     deallocate as model_deallocate,
 )
-from aggregates import Product
+from domain.aggregates import Product
 from services import AbstractUnitOfWork, ProductUnitOfWork, BatchUnitOfWork
 
 # Seems like this module sits between the Application (API) Layer and the Domain Layer

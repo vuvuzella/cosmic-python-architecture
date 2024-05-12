@@ -1,9 +1,12 @@
 from dataclasses import dataclass
+
 from sqlalchemy_serializer import SerializerMixin
+
+from domain.models.base import Entity
 
 
 @dataclass(frozen=False)
-class Orderline(SerializerMixin):
+class Orderline(Entity, SerializerMixin):
     orderid: str
     sku: str
     qty: int

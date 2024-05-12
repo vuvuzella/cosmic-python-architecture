@@ -1,7 +1,7 @@
-from models import Orderline
-
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
+
+from domain.models import Orderline
 
 
 def test_orderline_mapper_can_load_lines(session: Session):
