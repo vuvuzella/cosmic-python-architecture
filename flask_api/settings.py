@@ -1,7 +1,7 @@
-from pydantic import BaseConfig
+from settings import BaseSettings
 
 
-class FlaskApiSettings(BaseConfig):
+class FlaskApiSettings(BaseSettings):
     API_URL: str = ""
 
 

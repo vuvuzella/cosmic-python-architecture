@@ -5,6 +5,8 @@ from sqlalchemy import Column, Date, ForeignKey, Integer, MetaData, String, Tabl
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import mapper, relationship
 
+from domain.aggregates import Product
+
 # the ORM imports the domain model, not the other way around
 from domain.models import Batch, Orderline
 
@@ -27,7 +29,7 @@ batch = Table(
     "batch",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("reference", String(255)),
+    Column("reference", ForeignKey("product.sku")),
     Column("name", String(255)),
     Column("_purchased_quantity", Integer),
     Column("eta", Date),
@@ -42,12 +44,17 @@ allocations = Table(
     Column("batch_id", ForeignKey("batch.id")),
 )
 
+product = Table(
+    "product",
+    metadata,
+    Column("sku", String(255), primary_key=True, autoincrement=False),
+)
+
 
 def create_tables(engine: Engine):
-    metadata.create_all(engine)
+    metadata.create_all(engine, checkfirst=True)
 
 
-# TODO: Im still fuzzy in how the relationship works without its own model. How does it add orders in batches and preserve its mappings?
 def start_mappers():
     lines_mapper = mapper(Orderline, order_lines)
     batch_mapper = mapper(
@@ -55,7 +62,19 @@ def start_mappers():
         batch,
         properties={
             "_allocations": relationship(
-                argument=lines_mapper, secondary=allocations, collection_class=set
+                argument=lines_mapper,
+                secondary=allocations,
+                collection_class=set,
+                lazy="subquery",
+            )
+        },
+    )
+    products_mapper = mapper(
+        Product,
+        product,
+        properties={
+            "batches": relationship(
+                argument=batch_mapper, collection_class=list, lazy="subquery"
             )
         },
     )

@@ -1,14 +1,16 @@
-from pydantic import BaseSettings, Field, stricturl, validator
 from typing import Dict
+
+from pydantic import BaseSettings, Field, stricturl, validator
 
 
 class Settings(BaseSettings):
+    CREATE_TABLES: bool = False
     # DB Connection
     DB_PROTOCOL: str = "postgresql+psycopg2"
     DB_USERNAME: str = "Nope"
     DB_PASSWORD: str = "Nope"
     DB_HOST: str = "Nope"
-    DB_PORT: int = 5435
+    DB_PORT: int = 5432
     DB_NAME: str = "cosmic_python_db"
     # DB_DSN_QUERY: str = Field("sslmode=requre", env=[""])
     # DB_DSB: stricturl(tld_required=False, allowed_schemes={"postgresql", "postgresql+asyncpg", "postgresql+psycopg", "postgresql+psycopg2"}) = Field(None, env=[""])

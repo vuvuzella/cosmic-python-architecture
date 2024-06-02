@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1
 
-FROM python:3.10-slim-buster
+FROM python:3.11-slim-buster
 
 WORKDIR /app
+
+RUN python3 -m pip install --upgrade pip
 
 RUN python3 -m pip install --user pipx
 RUN python3 -m pipx ensurepath
@@ -18,13 +20,14 @@ ENV POETRY_HOME="/opt/poetry" \
 COPY poetry.lock .
 COPY pyproject.toml .
 
-RUN poetry install --no-root
-
 COPY flask_api/ ./flask_api
-
-COPY models/ ./models
+COPY domain/ ./domain
+COPY infrastructure/ ./infrastructure
+COPY services/ ./services
 COPY *.py ./
+
+RUN poetry install --no-root
 
 EXPOSE 5000
 
-CMD ["poetry", "run", "flask", "--app", "flask_api.app", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["poetry", "run", "gunicorn", "--workers", "4", "--bind", "0.0.0.0:5000", "flask_api.app:app" ]

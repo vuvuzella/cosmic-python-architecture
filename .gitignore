@@ -5,3 +5,4 @@ __pycache__
 .persistent_store
 .coverage
 pytest.ini
+*.ipynb

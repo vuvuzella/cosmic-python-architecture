@@ -1,37 +1,33 @@
 import json
 from dataclasses import asdict
 
-import uvicorn
 from flask import Flask, request
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from domain.models import InsufficientStocksException
-from infrastructure.orm import create_tables, start_mappers
-from infrastructure.repository import SqlAlchemyRepository
+from infrastructure.orm import start_mappers
 from services.services import InvalidSkuError, allocate, deallocate, restock
 from services.unit_of_work import BatchUnitOfWork, ProductUnitOfWork
-from settings import global_settings
-
-engine = create_engine(global_settings.DB_DSN)
-
-# setup the database with tables
-create_tables(engine)
 
 # map the models to database tables and relationships
-start_mappers()
-get_session = sessionmaker(bind=engine)
+
 app = Flask(__name__)
+start_mappers()
 
 
-@app.route("/batches", methods=["GET"])
-def get_batches_endpoint():
-    session = get_session()
-    repo = SqlAlchemyRepository(session)
+# @app.route("/batches", methods=["GET"])
+# def get_batches_endpoint():
+#     uow = BatchUnitOfWork()
+#     with uow:
+#         batches = uow.repository.list()
+#         return {"batches": batches}, 200
 
-    batches = [batch for batch in repo.list()]
 
-    return {"batches": batches}, 200
+@app.route("/products", methods=["GET"])
+def get_products_endpoint():
+    uow = ProductUnitOfWork()
+    with uow:
+        products = uow.repository.list()
+        return {"products": [product.to_json() for product in products]}, 200
 
 
 @app.route("/allocate", methods=["POST"])
@@ -40,10 +36,10 @@ def allocate_endpoint():
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
 
-    uow = BatchUnitOfWork()
-
     try:
-        batchref = allocate(order_id=order_id, sku=sku, quantity=qty, uow=uow)
+        batchref = allocate(
+            order_id=order_id, sku=sku, quantity=qty, uow=BatchUnitOfWork()
+        )
     except (InsufficientStocksException, InvalidSkuError) as e:
         return {"message": str(e)}, 400
 
@@ -56,10 +52,8 @@ def deallocate_endpoint():
     sku = request.json["sku"]  # type: ignore
     qty = request.json["qty"]  # type: ignore
 
-    uow = BatchUnitOfWork()
-
     try:
-        batchref = deallocate(orderid=order_id, sku=sku, qty=qty, uow=uow)
+        batchref = deallocate(orderid=order_id, sku=sku, qty=qty, uow=BatchUnitOfWork())
     except InvalidSkuError as e:
         return {"message": str(e)}, 400
 
@@ -75,28 +69,12 @@ def restock_endpoint():
     qty = body.get("qty")
     eta = body.get("eta")
 
-    uow = BatchUnitOfWork()
-
     try:
-        batch = restock(reference=reference, name=name, qty=qty, eta=eta, uow=uow)
+        batch = restock(
+            reference=reference, name=name, qty=qty, eta=eta, uow=BatchUnitOfWork()
+        )
 
         return {"batchref": batch.to_dict()}, 200
 
     except Exception as e:
         return {"message": str(e)}, 400
-
-
-def start():
-    # $ poetry run uvicorn flask_api.app:start --host=0.0.0.0 --port=8000 --reload
-    uvicorn.run(
-        app=app,
-        host="0.0.0.0",
-        port=8000,
-        loop="uvloop",
-        proxy_headers=True,
-        forwarded_allow_ips="*",
-    )
-
-
-if __name__ == "__main__":
-    start()

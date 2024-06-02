@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, TypeVar, Union
+from typing import Any, Generic, List, Type, TypeVar, Union
 
 from sqlalchemy.orm import Session
 
@@ -37,6 +37,11 @@ class SqlAlchemyRepository(AbstractRepository, Generic[AggregateT]):
     aggregates are entrypoints to entities
     """
 
+    @property
+    @abstractmethod
+    def _aggregate(self) -> Type[AggregateT]:
+        ...
+
     def __init__(self, session: Session) -> None:
         super().__init__()
         self._session = session
@@ -44,21 +49,25 @@ class SqlAlchemyRepository(AbstractRepository, Generic[AggregateT]):
     def add(self, batch: AggregateT):
         self._session.add(batch)
 
-    def get(self, reference: str) -> AggregateT:
-        return self._session.query(AggregateT).filter_by(reference=reference).one()
+    def get(self, sku: str) -> AggregateT:
+        return self._session.query(self._aggregate).filter_by(sku=sku).one()
 
     def list(self) -> List[AggregateT]:
-        return self._session.query(AggregateT).all()
+        return self._session.query(self._aggregate).all()
 
 
 # This is an antipattern! Repositories should be returning just aggregates! not Entities!
 # We just demonstrate it here
 class BatchRepository(SqlAlchemyRepository[Batch]):
-    ...
+    @property
+    def _aggregate(self) -> Type[Batch]:
+        return Batch
 
 
 class ProductRepository(SqlAlchemyRepository[Product]):
-    ...
+    @property
+    def _aggregate(self) -> Type[Product]:
+        return Product
 
 
 class FakeRepository(AbstractRepository):

@@ -1,14 +1,18 @@
-from typing import List, Optional
 from datetime import date
+from typing import List, Optional
 
+from domain.aggregates import Product
 from domain.models import (
-    Orderline,
     Batch,
+    Orderline,
+)
+from domain.models import (
     allocate as model_allocate,
+)
+from domain.models import (
     deallocate as model_deallocate,
 )
-from domain.aggregates import Product
-from services import AbstractUnitOfWork, ProductUnitOfWork, BatchUnitOfWork
+from services import AbstractUnitOfWork, BatchUnitOfWork, ProductUnitOfWork
 
 # Seems like this module sits between the Application (API) Layer and the Domain Layer
 # This is used by the application (API) layer to perform domain verbs/actions

@@ -6,10 +6,11 @@ from typing import Any, List, Optional, Set
 from sqlalchemy_serializer import SerializerMixin
 
 from domain.models.base import Entity
+from domain.models.order_line import Orderline
 
 
 @dataclass
-class Batch(Entity, SerializerMixin):
+class Batch(Entity):
     reference: str
     name: str
     _purchased_quantity: int
@@ -88,6 +89,7 @@ class Batch(Entity, SerializerMixin):
         return set([line]).issubset(self._allocations)
 
 
+# TODO: For deprecation. This is superceded by the aggregate method
 def allocate(order_line: "Orderline", batches: List[Batch]):
     sorted_allocatable_batch = [
         batch_item
@@ -104,6 +106,7 @@ def allocate(order_line: "Orderline", batches: List[Batch]):
         raise InsufficientStocksException(f"Insufficient in stock for {order_line.sku}")
 
 
+# TODO: For deprecation. This is superceded by the aggregate method
 def deallocate(order_line: "Orderline", batches: List[Batch]):
     sorted_deallocatable_batch = [
         batch_item for batch_item in batches if batch_item._can_deallocate(order_line)

@@ -27,8 +27,10 @@ services:
     image: flask_api:latest
     build: ./
     environment:
-      - DB_PORT=5435
+      - DB_PORT=5432
       - DB_HOST=db # this is the way to reference another service's hostname
+      - DB_USERNAME=docker
+      - DB_PASSWORD=docker
     ports:
       - 5000:5000
     volumes:
@@ -43,3 +45,4 @@ volumes:
       type: none
       o: bind
       device: ${PWD}/.persistent_store/db_volume
+
