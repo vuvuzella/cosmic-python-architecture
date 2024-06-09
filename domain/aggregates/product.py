@@ -26,6 +26,7 @@ class Product(AbstractAggregate):
 
     sku: str
     batches: List[Batch]
+    version: int
     # events: List[str] = []
 
     def __init__(self, sku: str, batches: List[Batch]) -> None:
@@ -43,6 +44,7 @@ class Product(AbstractAggregate):
         try:
             batch = next(b for b in self.batches if b.can_allocate(line))
             batch.allocate(line)
+            self.version += 1
             return batch.reference
         except StopIteration:
             # raise OutOfStock(f"Out of stock for sku {line.sku}")
@@ -59,6 +61,7 @@ class Product(AbstractAggregate):
         try:
             deallocated_batch = next(iter(sorted_deallocatable_batch))
             deallocated_batch.deallocate(line)
+            self.version += 1
             return deallocated_batch.reference
         except StopIteration:
             # Not a business event, so raise an exception instead

@@ -1,5 +1,9 @@
 Generic single-database configuration.
 
 ## To Run the migrations:
+`poetry run alembic upgrade head`
 
-1. ``
+## To create migrations:
+`poetry run alembic revision --autogenerate -m "My comment"`
+
+
