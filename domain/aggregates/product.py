@@ -14,8 +14,9 @@ from domain.models import (
     Orderline,
 )
 
-# class OutOfStock(Exception):
-#     ...
+
+class OutOfStock(Exception):
+    ...
 
 
 @dataclass
@@ -32,7 +33,7 @@ class Product(AbstractAggregate):
     def __init__(self, sku: str, batches: List[Batch]) -> None:
         self.sku = sku
         self.batches = batches
-        self.events = []
+        # self.events = []
 
     @property
     def available_quantity(self) -> int:
@@ -47,8 +48,8 @@ class Product(AbstractAggregate):
             self.version += 1
             return batch.reference
         except StopIteration:
-            # raise OutOfStock(f"Out of stock for sku {line.sku}")
-            self.events.append(OutOfStockEvent(sku=self.sku))
+            raise OutOfStock(f"Out of stock for sku {line.sku}")
+            # self.events.append(OutOfStockEvent(sku=self.sku))
             return None
 
     def deallocate(self, line: Orderline):

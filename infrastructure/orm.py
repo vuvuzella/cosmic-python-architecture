@@ -1,9 +1,9 @@
 import logging
 from typing import Set
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, MetaData, String, Table, event
+from sqlalchemy import Column, Date, ForeignKey, Integer, MetaData, String, Table
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import mapper, relationship
+from sqlalchemy.orm import clear_mappers, mapper, relationship
 
 from domain.aggregates import Product
 
@@ -29,8 +29,8 @@ batch = Table(
     "batch",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("reference", ForeignKey("product.sku")),
-    Column("name", String(255)),
+    Column("reference", String(255)),
+    Column("sku", ForeignKey("product.sku")),
     Column("_purchased_quantity", Integer),
     Column("eta", Date),
 )

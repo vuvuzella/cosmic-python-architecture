@@ -4,6 +4,7 @@ from typing import Generic, List, Type, TypeVar
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from domain.aggregates import Product
 from domain.models import Batch
 from infrastructure import (
     AbstractRepository,
@@ -15,7 +16,8 @@ from infrastructure import (
 from settings import global_settings
 
 DEFAULT_SESSION_FACTORY = sessionmaker(
-    bind=create_engine(url=global_settings.DB_DSN), expire_on_commit=False
+    bind=create_engine(url=global_settings.DB_DSN, isolation_level="REPEATABLE READ"),
+    expire_on_commit=False,
 )
 
 RepositoryT = TypeVar("RepositoryT", bound=SqlAlchemyRepository)
@@ -78,6 +80,14 @@ class ProductUnitOfWork(SqlAlchemyUnitOfWork[ProductRepository]):
     @property
     def _repository(self) -> Type[ProductRepository]:
         return ProductRepository
+
+    def get(self, sku: str) -> Product:
+        try:
+            product = self.repository.get(sku=sku)
+            return product
+        except Exception as e:
+            # TODO: add logger
+            raise e
 
 
 class BatchUnitOfWork(SqlAlchemyUnitOfWork[BatchRepository]):

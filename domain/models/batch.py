@@ -12,16 +12,22 @@ from domain.models.order_line import Orderline
 @dataclass
 class Batch(Entity):
     reference: str
-    name: str
+    sku: str
     _purchased_quantity: int
     eta: date | None
     # TODO: make type hints work without causing circular dependencies
     # in the application
     _allocations: Set["Orderline"]
 
-    def __init__(self, reference: str, name: str, qty: int, eta: Optional[date] = None):
+    def __init__(
+        self,
+        reference: str,
+        sku: str,
+        qty: int,
+        eta: Optional[date] = None,
+    ):
         self.reference = reference
-        self.name = name
+        self.sku = sku
         self._purchased_quantity = qty
         self.eta = eta
         self._allocations = set()
@@ -63,14 +69,14 @@ class Batch(Entity):
             )  # I think this uses the __eq__ definition of the OrderLine
         else:
             raise InsufficientStocksException(
-                f"Unable to allocate {line.qty} of {self.name}, only {self.available_quantity} remaining "
+                f"Unable to allocate {line.qty} of {self.reference}, only {self.available_quantity} remaining "
             )
 
     # business validation
     def can_allocate(self, line: "Orderline") -> bool:
         return (
             self.available_quantity - line.qty >= 0
-            and line.sku.lower() == self.name.lower()
+            and line.sku.lower() == self.sku.lower()
         )
 
     def _can_deallocate(self, line: "Orderline") -> bool:

@@ -1,29 +1,11 @@
 import pytest
 import requests
-from typing import Optional, List, Tuple
+
 from flask_api.settings import flask_api_setting
-from uuid import uuid1
+from tests.common import add_stock, random_batch_ref, random_order_id, random_sku
+
 
 # Test about web stuff (end 2 end)
-
-
-def random_sku(sku: Optional[str] = None):
-    return f"sku-{uuid1()}"
-
-
-def random_batch_ref(number: Optional[int] = None):
-    return f"batch-ref-{uuid1()}"
-
-
-# TODO: inserts a stock to the database!
-def add_stock(stocks: List[Tuple]):
-    raise NotImplementedError
-
-
-def random_order_id(num: Optional[int] = None):
-    return f"order-id-{uuid1()}"
-
-
 @pytest.mark.usefixtures("restart_api")
 def test_api_returns_allocations():
     sku_one, sku_two = random_sku(), random_sku("other")
