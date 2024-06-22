@@ -21,7 +21,7 @@ order_lines = Table(
     Column("id", Integer, primary_key=True, autoincrement=True),
     Column("sku", String(255)),
     Column("qty", Integer, nullable=False),
-    Column("orderid", String(255)),
+    Column("orderid", String(255), unique=True),
     # Column("parentid", Integer, ForeignKey("batch.id"), nullable=True),
 )
 
@@ -29,7 +29,7 @@ batch = Table(
     "batch",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("reference", String(255)),
+    Column("reference", String(255), unique=True),
     Column("sku", ForeignKey("product.sku")),
     Column("_purchased_quantity", Integer),
     Column("eta", Date),
@@ -40,8 +40,8 @@ allocations = Table(
     "allocations",
     metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("orderline_id", ForeignKey("order_lines.id")),
-    Column("batch_id", ForeignKey("batch.id")),
+    Column("orderline_id", ForeignKey("order_lines.orderid")),
+    Column("batch_id", ForeignKey("batch.reference")),
 )
 
 product = Table(

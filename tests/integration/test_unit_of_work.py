@@ -7,8 +7,10 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from domain.models import Orderline
-from services.unit_of_work import ProductUnitOfWork
+from services.unit_of_work import BatchUnitOfWork, ProductUnitOfWork
 from tests.common import (
+    delete_all_data,
+    get_allcated_batch_ref,
     insert_batch,
     insert_product,
     random_batch_ref,
@@ -27,11 +29,30 @@ def test_data(session: Session):
 
     yield sku, batch_ref
 
+    delete_all_data(session=session)
+    print("Done")
 
-@pytest.mark.skip
-def test_uow_retrieve_batch_and_allocate():
+
+def test_uow_retrieve_batch_and_allocate(session: Session, test_data):
     # TODO: implement tests for the unit of work
-    ...
+    sku, batch_ref = test_data
+    orderid = random_order_id()
+    uow = BatchUnitOfWork()
+    with uow:
+        batch = uow.repository.get(reference=batch_ref)
+        line = Orderline(orderid=orderid, sku=sku, qty=10)
+        batch.allocate(line=line)
+        # uow.commit()
+
+    results = get_allcated_batch_ref(
+        session=session, orderid=orderid, batch_ref=batch_ref
+    )
+    results = results.fetchall()
+    print(results)
+
+    assert results is not None
+    [[results]] = results
+    assert results == batch_ref
 
 
 def try_to_allocate(orderid, sku, exceptions):

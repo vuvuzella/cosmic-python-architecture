@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, List, Type, TypeVar, Union
 
+from sqlalchemy import String, cast
 from sqlalchemy.orm import Session
 
 from domain.aggregates import Product
@@ -62,6 +63,13 @@ class BatchRepository(SqlAlchemyRepository[Batch]):
     @property
     def _aggregate(self) -> Type[Batch]:
         return Batch
+
+    def get(self, reference: str) -> Batch:
+        return (
+            self._session.query(self._aggregate)
+            .filter_by(reference=cast(reference, String))
+            .one()
+        )
 
 
 class ProductRepository(SqlAlchemyRepository[Product]):

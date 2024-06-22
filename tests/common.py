@@ -3,7 +3,7 @@ from random import random
 from typing import List, Optional, Tuple
 from uuid import uuid1
 
-from sqlalchemy import text
+from sqlalchemy import String, cast, text
 from sqlalchemy.orm import Session
 
 from infrastructure.orm import metadata
@@ -24,7 +24,7 @@ def random_batch_id():
 def random_order_id(name: str | None = None):
     # return f"order-id-{uuid1()}"
     rand_name = name if name else "random_name"
-    return int(random() * 1000000000)
+    return f"{rand_name}-int(random() * 1000000000)"
 
 
 # TODO: inserts a stock to the database!
@@ -74,14 +74,32 @@ def insert_batch(
     return result
 
 
-def delete_order_line(session: Session, sku: str):
+def delete_all_data(session: Session):
     result = session.execute(
         text(
             """
-            DELETE from public.order_lines WHERE sku = :sku;
+            DELETE FROM public.allocations;
+            DELETE FROM public.order_lines;
+            DELETE FROM public.batch;
+            DELETE FROM public.product;
+            """
+        )
+    )
+    session.commit()
+    return result
+
+
+def get_allcated_batch_ref(session: Session, orderid: str, batch_ref: str):
+    result = session.execute(
+        text(
+            """
+            SELECT batch_id
+            FROM public.allocations
+            WHERE batch_id = ':batch_ref' AND orderline_id = :orderid
+            LIMIT 1;
             """
         ),
-        dict(sku=sku),
+        dict(batch_ref=batch_ref, orderid=orderid),
     )
     session.commit()
     return result
