@@ -71,7 +71,7 @@ def restock_endpoint():
 
     try:
         batch = restock(
-            reference=reference, name=name, qty=qty, eta=eta, uow=BatchUnitOfWork()
+            reference=reference, sku=name, qty=qty, eta=eta, uow=BatchUnitOfWork()
         )
 
         return {"batchref": batch.to_dict()}, 200

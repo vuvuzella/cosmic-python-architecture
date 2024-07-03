@@ -2,7 +2,7 @@ from typing import Generator
 
 import pytest
 from sqlalchemy.engine import Engine, create_engine
-from sqlalchemy.orm import Session, clear_mappers
+from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
 from infrastructure.orm import metadata, order_lines, start_mappers
 from settings import global_settings

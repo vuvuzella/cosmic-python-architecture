@@ -11,8 +11,10 @@ from domain.models.order_line import Orderline
 
 @dataclass
 class Batch(Entity):
-    reference: str
+    # references the product sku
     sku: str
+    # identifies an individual batch
+    reference: str
     _purchased_quantity: int
     eta: date | None
     # TODO: make type hints work without causing circular dependencies
@@ -76,7 +78,10 @@ class Batch(Entity):
     def can_allocate(self, line: "Orderline") -> bool:
         return (
             self.available_quantity - line.qty >= 0
+            # Same Product
             and line.sku.lower() == self.sku.lower()
+            # line has not yet been allocated to this batch
+            and line not in self._allocations
         )
 
     def _can_deallocate(self, line: "Orderline") -> bool:
@@ -91,12 +96,21 @@ class Batch(Entity):
         else:
             raise DeallocateStocksException("Stock not allocated")
 
+    def deallocate_one(self) -> Orderline:
+        return self._allocations.pop()
+
     def contains(self, line: "Orderline") -> bool:
         return set([line]).issubset(self._allocations)
 
 
 # TODO: For deprecation. This is superceded by the aggregate method
 def allocate(order_line: "Orderline", batches: List[Batch]):
+    allocated_batch = [batch for batch in batches if batch.contains(order_line)]
+    allocated_batch.sort()
+
+    if len(allocated_batch) > 0:
+        return allocated_batch[0]
+
     sorted_allocatable_batch = [
         batch_item
         for batch_item in sorted(batches)  # also uses hash to sort by reference?

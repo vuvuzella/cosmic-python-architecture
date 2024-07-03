@@ -1,15 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Generic, List, Type, TypeVar
+from copy import deepcopy
+from typing import Generic, List, Protocol, Type, TypeVar, Union
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from domain.aggregates import Product
-from domain.models import Batch
+from domain.aggregates import AbstractAggregate, Product
+from domain.models import Batch, Entity
 from infrastructure import (
     AbstractRepository,
+    BatchFakeRepository,
     BatchRepository,
     FakeRepository,
+    ProductFakeRepository,
     ProductRepository,
     SqlAlchemyRepository,
 )
@@ -18,18 +21,22 @@ from settings import global_settings
 DEFAULT_SESSION_FACTORY = sessionmaker(
     bind=create_engine(url=global_settings.DB_DSN, isolation_level="REPEATABLE READ"),
     expire_on_commit=False,
+    autocommit=False,
 )
 
-RepositoryT = TypeVar("RepositoryT", bound=SqlAlchemyRepository)
+RepositoryT = TypeVar("RepositoryT", bound=AbstractRepository)
+SqlAlchemyRepositoryT = TypeVar("SqlAlchemyRepositoryT", bound=SqlAlchemyRepository)
 
 
-class AbstractUnitOfWork(ABC):
+class AbstractUnitOfWork(ABC, Generic[RepositoryT]):
+    repository: RepositoryT
+
     @abstractmethod
     def rollback(self):
         raise NotImplementedError
 
     @abstractmethod
-    def _commit(self):
+    def commit(self):
         raise NotImplementedError
 
     @abstractmethod
@@ -41,16 +48,13 @@ class AbstractUnitOfWork(ABC):
         raise NotImplementedError
 
 
-class SqlAlchemyUnitOfWork(AbstractUnitOfWork, Generic[RepositoryT]):
-    """
-    This contains the units of work that needs to be done
-    given that the storage is SQL Alchemy
-    """
-
-    repository: RepositoryT
-
+class BaseUnitOfWork(AbstractUnitOfWork, ABC, Generic[SqlAlchemyRepositoryT]):
+    # _repository resides in the Base class because it is part of how to implement
+    # a generic Base Unit Of Work with common implementations of
+    # rollback, _commit, __enter__ and __exit__ methods
     @property
-    def _repository(self) -> Type[RepositoryT]:
+    @abstractmethod
+    def _repository(self) -> Type[SqlAlchemyRepositoryT]:
         ...
 
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY) -> None:
@@ -61,7 +65,7 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork, Generic[RepositoryT]):
         This UoW can be used as a context manager
         """
         self.session = self.session_factory()
-        self.repository = self._repository(self.session)
+        self.repository = self._repository(session=self.session)
 
     def __exit__(self, *args):
         self.session.close()
@@ -76,7 +80,18 @@ class SqlAlchemyUnitOfWork(AbstractUnitOfWork, Generic[RepositoryT]):
         self.session.commit()
 
 
-class ProductUnitOfWork(SqlAlchemyUnitOfWork[ProductRepository]):
+class SqlAlchemyUnitOfWork(BaseUnitOfWork[SqlAlchemyRepository]):
+    """
+    This contains the units of work that needs to be done
+    given that the storage is SQL Alchemy
+    """
+
+    @property
+    def _repository(self) -> Type[SqlAlchemyRepository]:
+        return SqlAlchemyRepository
+
+
+class ProductUnitOfWork(BaseUnitOfWork[ProductRepository]):
     @property
     def _repository(self) -> Type[ProductRepository]:
         return ProductRepository
@@ -90,25 +105,51 @@ class ProductUnitOfWork(SqlAlchemyUnitOfWork[ProductRepository]):
             raise e
 
 
-class BatchUnitOfWork(SqlAlchemyUnitOfWork[BatchRepository]):
+class BatchUnitOfWork(BaseUnitOfWork[BatchRepository]):
     @property
     def _repository(self) -> Type[BatchRepository]:
         return BatchRepository
 
 
-class FakeUnitOfWork(AbstractUnitOfWork):
-    def __init__(self, batches: List[Batch] = []) -> None:
-        self.repository = FakeRepository(batches)
+EntityOrAggregateT = TypeVar("EntityOrAggregateT", bound=Entity | AbstractAggregate)
+FakeRepositoryT = TypeVar("FakeRepositoryT", bound=FakeRepository)
+
+
+class FakeUnitOfWork(
+    AbstractUnitOfWork, ABC, Generic[FakeRepositoryT, EntityOrAggregateT]
+):
+    @property
+    @abstractmethod
+    def _repository(self) -> Type[FakeRepositoryT]:
+        ...
+
+    def __init__(self, data: List[EntityOrAggregateT] | None = []) -> None:
+        self.repository = self._repository(data)
         super().__init__()
 
-    def rollback(self):
-        ...
-
-    def commit(self):
-        ...
+    def _commit(self):
+        self.comitted = True
 
     def __enter__(self, *args):
         ...
 
     def __exit__(self, *args):
         ...
+
+    def rollback(self):
+        ...
+
+    def commit(self):
+        self._commit()
+
+
+class BatchFakeUnitOfWork(FakeUnitOfWork[BatchFakeRepository, Batch]):
+    @property
+    def _repository(self) -> Type[BatchFakeRepository]:
+        return BatchFakeRepository
+
+
+class ProductFakeUnitOfWork(FakeUnitOfWork[ProductFakeRepository, Product]):
+    @property
+    def _repository(self) -> Type[ProductFakeRepository]:
+        return ProductFakeRepository

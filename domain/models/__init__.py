@@ -1,3 +1,4 @@
+from .base import Entity
 from .batch import (
     Batch,
     DeallocateStocksException,

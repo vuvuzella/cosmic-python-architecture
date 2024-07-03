@@ -14,25 +14,26 @@ from domain.models.base import Entity
 # The idea is to separate the database access specific functions from the model themselves.
 # Repositories should never know about the model
 
-AggregateT = TypeVar("AggregateT", bound=Union[AbstractAggregate, Entity])
-EntityT = TypeVar("EntityT")
+AggregateOrEntityT = TypeVar(
+    "AggregateOrEntityT", bound=Union[AbstractAggregate, Entity]
+)
 
 
-class AbstractRepository(ABC):
+class AbstractRepository(ABC, Generic[AggregateOrEntityT]):
     @abstractmethod
-    def add(self, aggregate: AggregateT):
+    def add(self, aggregate: AggregateOrEntityT) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, reference: Any) -> AggregateT:
+    def get(self, reference: Any) -> AggregateOrEntityT:
         raise NotImplementedError
 
     @abstractmethod
-    def list(self) -> list[AggregateT]:
+    def list(self) -> list[AggregateOrEntityT]:
         raise NotImplementedError
 
 
-class SqlAlchemyRepository(AbstractRepository, Generic[AggregateT]):
+class SqlAlchemyRepository(AbstractRepository, Generic[AggregateOrEntityT]):
     """Generic Sql Alchemy repository
     usually this should return an aggregate
     aggregates are entrypoints to entities
@@ -40,20 +41,20 @@ class SqlAlchemyRepository(AbstractRepository, Generic[AggregateT]):
 
     @property
     @abstractmethod
-    def _aggregate(self) -> Type[AggregateT]:
+    def _aggregate(self) -> Type[AggregateOrEntityT]:
         ...
 
     def __init__(self, session: Session) -> None:
         super().__init__()
         self._session = session
 
-    def add(self, batch: AggregateT):
+    def add(self, batch: AggregateOrEntityT):
         self._session.add(batch)
 
-    def get(self, sku: str) -> AggregateT:
+    def get(self, sku: str) -> AggregateOrEntityT:
         return self._session.query(self._aggregate).filter_by(sku=sku).one()
 
-    def list(self) -> List[AggregateT]:
+    def list(self) -> List[AggregateOrEntityT]:
         return self._session.query(self._aggregate).all()
 
 
@@ -78,17 +79,32 @@ class ProductRepository(SqlAlchemyRepository[Product]):
         return Product
 
 
-class FakeRepository(AbstractRepository):
-    def __init__(self, batches: List[Batch] = []) -> None:
-        self._batches = batches
+class FakeRepository(AbstractRepository, Generic[AggregateOrEntityT]):
+    @abstractmethod
+    def _get_identifier(self, item: AggregateOrEntityT):
+        ...
+
+    def __init__(self, initial_data: List[AggregateOrEntityT] | None = None) -> None:
+        self._data = initial_data or []
         super().__init__()
 
-    # TODO: no uniqueness validation or check!
-    def add(self, batch) -> None:
-        self._batches.append(batch)
+    def add(self, aggregate: AggregateOrEntityT) -> None:
+        self._data.append(aggregate)
 
-    def get(self, reference: str) -> Batch:
-        return next(b for b in self._batches if b.reference == reference)
+    def get(self, reference: str) -> AggregateOrEntityT:
+        items = [i for i in self._data if self._get_identifier(i) == reference]
+        items = iter(items)
+        return next(items)
 
-    def list(self) -> List[Batch]:
-        return self._batches
+    def list(self) -> List[AggregateOrEntityT]:
+        return self._data
+
+
+class ProductFakeRepository(FakeRepository[Product]):
+    def _get_identifier(self, item: Product):
+        return item.sku
+
+
+class BatchFakeRepository(FakeRepository[Batch]):
+    def _get_identifier(self, item: Batch):
+        return item.reference

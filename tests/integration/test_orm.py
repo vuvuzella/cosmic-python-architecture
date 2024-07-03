@@ -2,6 +2,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from domain.models import Orderline
+from tests.common import random_order_id
+
+# Note:
+# these tests are primarily to help us learn sqlalchemy
+# but does not add value for the business in the long run
+# hence this can be thrown away once a repository or unit of work has has been in place
+# These tests are essentially superceded by the uow unit tests
 
 
 def test_orderline_mapper_can_load_lines(session: Session):
@@ -25,7 +32,8 @@ def test_orderline_mapper_can_load_lines(session: Session):
 
 
 def test_orderline_mapper_can_save_lines(session: Session):
-    new_line = Orderline("order1", "DECORATIVE-WIDGET", 12)
+    order_id = random_order_id()
+    new_line = Orderline(order_id, "DECORATIVE-WIDGET", 12)
     session.add(new_line)
     session.commit()
 
@@ -36,4 +44,4 @@ def test_orderline_mapper_can_save_lines(session: Session):
         """
         )
     ).all()
-    assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
+    assert rows == [(order_id, "DECORATIVE-WIDGET", 12)]

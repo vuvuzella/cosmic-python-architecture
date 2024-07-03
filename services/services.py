@@ -45,8 +45,11 @@ def allocate(
     order_id: str,
     sku: str,
     quantity: int,
-    uow: BatchUnitOfWork,
+    uow: AbstractUnitOfWork,
 ) -> Batch:
+    """
+    Creates an orderline given an order_id, sku and quantity, and assigns
+    """
     line = Orderline(order_id, sku, quantity)
 
     with uow:
@@ -55,13 +58,13 @@ def allocate(
         if not is_valid_sku(line.sku, batch):
             raise InvalidSkuError(f"Invalid sku: {line.sku}")
 
-        allocation = model_allocate(line, batch)
+        allocation = model_allocate(order_line=line, batches=batch)
         uow.commit()  # commit refers to the abstract uow commit, not from a db connector
 
         return allocation
 
 
-def deallocate(orderid: str, sku: str, qty: int, uow: BatchUnitOfWork):
+def deallocate(orderid: str, sku: str, qty: int, uow: AbstractUnitOfWork):
     line = Orderline(orderid=orderid, sku=sku, qty=qty)
     with uow:
         batch = uow.repository.list()
@@ -72,14 +75,43 @@ def deallocate(orderid: str, sku: str, qty: int, uow: BatchUnitOfWork):
         return deallocated_batch
 
 
-def restock(
-    reference: str, name: str, qty: int, eta: date | None, uow: BatchUnitOfWork
-):
-    batch = Batch(reference=reference, name=name, qty=qty, eta=eta)
+def restock(reference: str, sku: str, qty: int, eta: date | None, uow: BatchUnitOfWork):
+    batch = Batch(reference=reference, sku=sku, qty=qty, eta=eta)
     with uow:
         uow.repository.add(batch=batch)
         uow.commit()
         return batch
+
+
+def change_batch_quantity(
+    batch_ref: str, sku: str, new_quantity: int, uow: ProductUnitOfWork
+):
+    with uow:
+        product = uow.get(sku=sku)
+        batch = [batch for batch in product.batches if batch.reference == batch_ref]
+
+        if len(batch) > 1:
+            raise DuplicateBatchError(
+                f"Duplicate Batch Error with reference: {batch_ref}"
+            )
+
+        batch = batch[0]
+
+        batch._purchased_quantity = new_quantity
+
+        # pop any lines until available quantity is positive
+        deallocated_lines = []
+        while batch.available_quantity < 0:
+            deallocated_lines.append(batch.deallocate_one())
+
+        uow.commit()
+
+    return deallocated_lines
+
+
+class DuplicateBatchError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
 
 
 class InvalidSkuError(Exception):
@@ -88,4 +120,4 @@ class InvalidSkuError(Exception):
 
 
 def is_valid_sku(sku, batches: List[Batch]):
-    return sku in {batch.name for batch in batches}
+    return sku in {batch.sku for batch in batches}

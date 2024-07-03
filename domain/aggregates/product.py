@@ -30,9 +30,10 @@ class Product(AbstractAggregate):
     version: int
     # events: List[str] = []
 
-    def __init__(self, sku: str, batches: List[Batch]) -> None:
+    def __init__(self, sku: str, batches: List[Batch], version: int = 0) -> None:
         self.sku = sku
         self.batches = batches
+        self.version = version
         # self.events = []
 
     @property

@@ -6,6 +6,7 @@ from uuid import uuid1
 from sqlalchemy import String, cast, text
 from sqlalchemy.orm import Session
 
+from domain.models.order_line import Orderline
 from infrastructure.orm import metadata
 
 
@@ -24,7 +25,7 @@ def random_batch_id():
 def random_order_id(name: str | None = None):
     # return f"order-id-{uuid1()}"
     rand_name = name if name else "random_name"
-    return f"{rand_name}-int(random() * 1000000000)"
+    return f"{rand_name}-{int(random() * 1000000000)}"
 
 
 # TODO: inserts a stock to the database!
@@ -71,6 +72,37 @@ def insert_batch(
     )
     result = session.commit()
     print(result)
+    return result
+
+
+def insert_order_lines(session: Session, orderid: str, sku: str, qty: int):
+    result = session.execute(
+        text(
+            """
+    INSERT INTO public.order_lines
+    (sku, qty, orderid)
+    VALUES
+    (:sku, :qty, :orderid)
+    ;
+    """
+        ),
+        dict(sku=sku, qty=qty, orderid=orderid),
+    )
+    session.commit()
+    return result
+
+
+def insert_allocations(session: Session, orderid: str, batch_ref: str):
+    result = session.execute(
+        text(
+            """
+        INSERT INTO public.allocations (orderline_id, batch_id)
+        VALUES (:orderid, :batch_id)
+        """
+        ),
+        dict(orderid=orderid, batch_id=batch_ref),
+    )
+    session.commit()
     return result
 
 

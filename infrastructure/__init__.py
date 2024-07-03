@@ -1,7 +1,9 @@
 from .repository import (
     AbstractRepository,
-    SqlAlchemyRepository,
-    FakeRepository,
+    BatchFakeRepository,
     BatchRepository,
+    FakeRepository,
+    ProductFakeRepository,
     ProductRepository,
+    SqlAlchemyRepository,
 )
