@@ -64,6 +64,9 @@ class Batch(Entity):
 
     # Domain model level allocate function
     def allocate(self, line: "Orderline") -> None:
+        if line in self._allocations:
+            # already allocated, do nothing
+            return
         if self.can_allocate(line):
             # if not self._order_exists(line):
             self._allocations.add(
@@ -81,7 +84,7 @@ class Batch(Entity):
             # Same Product
             and line.sku.lower() == self.sku.lower()
             # line has not yet been allocated to this batch
-            and line not in self._allocations
+            # and line not in self._allocations
         )
 
     def _can_deallocate(self, line: "Orderline") -> bool:

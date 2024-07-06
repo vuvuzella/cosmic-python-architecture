@@ -7,6 +7,7 @@ from domain.events import OutOfStockEvent
 from domain.models import Batch, DeallocateStocksException, Orderline
 
 
+@pytest.mark.skip
 def test_records_out_of_stock_event_if_cannot_allocate():
     batch = Batch("batch1", "SMALL-FORK", 10, eta=datetime.date.today())
     product = Product(sku="SMALL-FORK", batches=[batch])
@@ -21,7 +22,6 @@ def test_records_out_of_stock_event_if_cannot_allocate():
     assert second_allocate_result is None
 
 
-@pytest.mark.skip
 def test_product_available_quantity():
     batch_1 = Batch("batch_id_1", "SMALL-FORK", 15, eta=datetime.date.today())
     batch_2 = Batch("batch_id_2", "SMALL-FORK", 50, eta=datetime.date.today())

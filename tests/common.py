@@ -1,5 +1,6 @@
 import datetime
-from random import random
+import string
+from random import choices, random
 from typing import List, Optional, Tuple
 from uuid import uuid1
 
@@ -10,12 +11,16 @@ from domain.models.order_line import Orderline
 from infrastructure.orm import metadata
 
 
+def generate_random_strings(length: int = 8):
+    return "".join(choices(string.ascii_letters, k=length))
+
+
 def random_sku(sku: Optional[str] = None):
     return f"sku-{uuid1()}"
 
 
-def random_batch_ref(number: Optional[int] = None):
-    return int(random() * 1000000000)
+def random_batch_ref(ref_name: Optional[str] = generate_random_strings()):
+    return f"{ref_name}-{int(random() * 1000000000)}"
 
 
 def random_batch_id():
@@ -47,13 +52,12 @@ def insert_product(session: Session, sku: str, product_version: int = 1):
         dict(sku=sku, version=product_version),
     )
     result = session.commit()
-    print(result)
     return result
 
 
 def insert_batch(
     session: Session,
-    ref: int,
+    ref: str,
     sku: str,
     qty: int,
     eta: datetime.datetime | None = None,
@@ -71,7 +75,6 @@ def insert_batch(
         dict(reference=ref, sku=sku, qty=qty, eta=eta),
     )
     result = session.commit()
-    print(result)
     return result
 
 

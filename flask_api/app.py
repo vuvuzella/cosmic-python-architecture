@@ -22,6 +22,11 @@ start_mappers()
 #         return {"batches": batches}, 200
 
 
+@app.route("/ping", methods=["GET"])
+def ping():
+    return "OK", 200
+
+
 @app.route("/products", methods=["GET"])
 def get_products_endpoint():
     uow = ProductUnitOfWork()

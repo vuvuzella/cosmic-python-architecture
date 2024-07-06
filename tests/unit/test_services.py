@@ -57,7 +57,6 @@ def test_error_for_invalid_sku():
         allocate(order_id=line.orderid, sku=line.sku, quantity=line.qty, uow=uow)
 
 
-@pytest.mark.skip
 def test_prefers_current_stock_batches_to_shipments():
     in_stock_batch = Batch("in-stock-batch", "RETRO-CLOCK", 100)
     shipping_batch = Batch(

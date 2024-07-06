@@ -1,108 +1,86 @@
+import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
 
 from domain.models import Batch, Orderline
-from infrastructure.repository import SqlAlchemyRepository
+from infrastructure.repository import BatchRepository
+from tests.common import (
+    insert_allocations,
+    insert_batch,
+    insert_order_lines,
+    insert_product,
+    random_batch_ref,
+    random_order_id,
+    random_sku,
+)
 
 
-def insert_order_lines(session: Session):
-    session.execute(
-        text(
-            """
-        INSERT INTO order_lines (orderid, sku, qty) VALUES
-            ('order-one', 'GENERIC-SOFA', 12);
-        """
-        )
-    )
+@pytest.fixture(scope="function")
+def prepare_test_data(session: Session):
+    order_line_id = random_order_id()
+    sku = random_sku()
+    ordered_qty = 12
 
-    [[order_line_id]] = session.execute(
-        text(
-            """
-        SELECT id FROM order_lines
-        WHERE orderid=:orderid AND sku=:sku
-        """
-        ),
-        {"orderid": "order-one", "sku": "GENERIC-SOFA"},
-    )
-    return order_line_id
+    batch_one = random_batch_ref()
+    purchased_quantity = 20
 
+    batch_two = random_batch_ref()
+    p_qty = 10
 
-def insert_batch(session: Session, batch_reference: str) -> int:
-    statement = text(
-        """
-        INSERT INTO public.batch (reference, name, _purchased_quantity, eta)
-            values (:batch_reference, 'GENERIC-SOFA', 100, NULL)
-        """,
-    )
-    session.execute(statement=statement, params=dict(batch_reference=batch_reference))
-    session.commit()
+    insert_product(session=session, sku=sku)
+    insert_batch(session=session, ref=batch_one, sku=sku, qty=purchased_quantity)
+    insert_batch(session=session, ref=batch_two, sku=sku, qty=p_qty)
+    insert_order_lines(session=session, orderid=order_line_id, sku=sku, qty=ordered_qty)
+    insert_allocations(session=session, orderid=order_line_id, batch_ref=batch_one)
 
-    [[batch_id]] = session.execute(
-        text(
-            """
-            SELECT id FROM public.batch
-                WHERE reference = :batch_reference
-                AND name = 'GENERIC-SOFA';
-            """
-        ),
-        dict(batch_reference=batch_reference),
-    )
-    return batch_id
-
-
-# TODO: implement insert allocation
-# This might require modifying tables and mappings!
-def insert_allocation(session: Session, order_line_id: int, batch_id: int):
-    session.execute(
-        text(
-            """
-            INSERT INTO order_lines (orderid, sku, qty)
-                VALUES (:order_line_id, 'GENERIC-SOFA', 10);
-            """
-        ),
-        dict(order_line_id=order_line_id, batch_id=batch_id),
-    )
-    session.execute(
-        text(
-            """
-            INSERT INTO allocations (orderline_id, batch_id)
-                VALUES (:order_line_id, :batch_id);
-            """
-        ),
-        dict(order_line_id=order_line_id, batch_id=batch_id),
+    return (
+        dict(orderid=order_line_id, sku=sku, ordered_qty=ordered_qty),
+        dict(batch_ref=batch_one, purchased_quantity=purchased_quantity),
+        dict(batch_ref=batch_two, purchased_quantity=p_qty),
+        sku,
     )
 
 
 def test_repository_can_retrieve_a_batch_with_allocations(
-    session: Session, restart_api: str
+    session: Session, prepare_test_data
 ):
-    order_line_id = insert_order_lines(session)
-    batch_one_id = insert_batch(session, "batch-one")
-    batch_two_id = insert_batch(session, "batch-two")
-    insert_allocation(session, order_line_id, batch_one_id)
-    repo = SqlAlchemyRepository(session)
-    retrieved = repo.get("batch-one")
-    expected = Batch("batch-one", "GENERIC-SOFA", 88, eta=None)
+    order, batch_one, batch_two, sku = prepare_test_data
+    repo = BatchRepository(session)
+    retrieved = repo.get(batch_one.get("batch_ref"))
+    expected = Batch(
+        batch_one.get("batch_ref"),
+        sku,
+        int(batch_one.get("purchased_quantity")) - int(order.get("ordered_qty")),
+        eta=None,
+    )
     assert retrieved == expected
-    assert retrieved.name == expected.name
+    assert retrieved.sku == expected.sku
     assert retrieved.available_quantity == expected.available_quantity
-    assert retrieved._allocations == set([Orderline("order-one", "GENERIC-SOFA", 12)])
+    assert retrieved._allocations == set(
+        [Orderline(order.get("orderid"), sku, order.get("ordered_qty"))]
+    )
 
 
-def test_repository_can_save_a_batch(session: Session):
-    batch = Batch("batch-no-1", "RUSTY-SOAPDISH", 100, eta=None)
+def test_repository_can_save_a_batch(session: Session, prepare_test_data):
+    batch_ref = random_batch_ref()
+    qty = 100
 
-    repo = SqlAlchemyRepository(session)
+    order, batch_one, batch_two, sku = prepare_test_data
+
+    batch = Batch(batch_ref, sku, qty, eta=None)
+
+    repo = BatchRepository(session)
     repo.add(batch=batch)
     session.commit()
 
     rows = session.execute(
         text(
             """
-        SELECT reference, name, _purchased_quantity, eta FROM batch
-            WHERE reference = 'batch-no-1' and name = 'RUSTY-SOAPDISH'
+        SELECT reference, sku, _purchased_quantity, eta FROM batch
+            WHERE reference = :batch_ref and sku = :sku
         """
-        )
+        ),
+        dict(batch_ref=batch_ref, sku=sku),
     ).all()
 
-    assert rows == [("batch-no-1", "RUSTY-SOAPDISH", 100, None)]
+    assert rows == [(batch_ref, sku, 100, None)]

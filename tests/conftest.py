@@ -1,6 +1,10 @@
+import datetime
+import time
+from pathlib import Path
 from typing import Generator
 
 import pytest
+import requests
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.orm import Session, clear_mappers, sessionmaker
 
@@ -47,7 +51,19 @@ def add_stock():
     raise NotImplementedError
 
 
+def wait_for_webapp_to_come_up():
+    deadline = datetime.datetime.now() + datetime.timedelta(seconds=10)
+    while datetime.datetime.now() < deadline:
+        contents = requests.get(url="http://localhost:5000/ping")
+        if contents.status_code == 200:
+            return
+
+    raise Exception("Failed to ping webapp")
+
+
 # TODO: implement restarting the api for tests
 @pytest.fixture(scope="session")
 def restart_api():
-    return "from restart_api"
+    (Path(__file__).parent.parent / "flask_api/app.py").touch()
+    time.sleep(0.5)
+    wait_for_webapp_to_come_up()
